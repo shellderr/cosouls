@@ -4,5 +4,4 @@ image: node:alpine
 variables:
   PUBLIC_URL: /cosouls-demo
 
-stages:
-  - deploy
+stage: deploy
