@@ -1,7 +1,15 @@
-# The Docker image that will be used to build your app
 image: node:alpine
 
-variables:
-  PUBLIC_URL: /cosouls-demo
+pages:
+  stage: deploy
+  script:
+    - echo "okokok"
+  artifacts:
+    paths:
+      - public
 
-stage: deploy
+
+# variables:
+#   PUBLIC_URL: /cosouls-demo
+
+# stage: deploy
