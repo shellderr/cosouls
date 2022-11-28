@@ -18,6 +18,16 @@ const turtle = {
 	dim: [400,400]
 };
 
+
+function repell(t, dir){
+	// return 1;
+	let p = addv(t.pos, mults(dir, t.delta));
+	p = adds(normalize(p, t.dim[0],t.dim[1]),1);
+	let d = sqrt(p[0]**2+(p[1]-.25)**2);
+	// let d = sqrt(p[0]**2+p[1]**2);
+	return (d <= 0.2 ) ? -1: 1;
+}
+
 const routines = {
 	'F': (t)=>{
 		let a = [t.pos]
@@ -29,9 +39,12 @@ const routines = {
 		t.pos = addv(t.pos, mults(t.dir, t.delta));
 	},
 	'-': (t)=>{
+		// let a = 2*Math.round(Math.random()*2)*Math.PI/180;
+		// let a = repell(t, vec_mul(t.dir, z_rot(t.theta)));
 		t.dir = vec_mul(t.dir, z_rot(t.theta))
 	},
 	'+': (t)=>{
+		// let a = repell(t, vec_mul(t.dir, z_rot(-t.theta)));	
 		t.dir = vec_mul(t.dir, z_rot(-t.theta))
 	},
 	'&': (t)=>{
