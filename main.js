@@ -11,9 +11,9 @@ canvas.width = ww;
 canvas.height = wh;
 canvas.style.backgroundColor = '#909090';
 ctx.lineWidth = 2
-ctx.shadowBlur = 4
-ctx.shadowColor = "purple";
-ctx.shadowOffsetX = 2;
+// ctx.shadowBlur = 4
+// ctx.shadowColor = "purple";
+// ctx.shadowOffsetX = 2;
 // ctx.strokeStyle = '#eeaaff'
 
 const rule = {
@@ -25,13 +25,13 @@ const rule = {
 	Y: '-FX'
 }
 
-const model = lsystem(rules[10], 5, 1, 0);
+const model = lsystem(rules[10], 5, 1, 20);
 model.v.forEach((v)=>{v[0]*=1.4; v[1]*=1.4;});
 // radialSort(model);
 // yshift_bound(model, .7);
 
 display(ctx, model, 1);
-npoly(ctx, ww, wh, 6, .1);
+// npoly(ctx, ww, wh, 6, .1);
 
 function display(ctx, model, f){
 	const n = floor(model.i.length*(f||1));
@@ -85,14 +85,14 @@ function line(ctx, w, h, ax, ay, bx, by){
     ctx.stroke();
 }
 
-let i = 0;
-// const rotate = g.create_rot(.1,.1,.1);
-const rotate = g.create_rot(-.08,.1,-.06);
-setInterval(()=>{
-	model.v = g.mat_mul_4(model.v, rotate);
-	ctx.clearRect(0,0,ww,wh);
-	npoly(ctx, ww, wh, 3+i*4, .1+i)
-	i += 0.005;
-	i -= floor(i);	
-	display(ctx, model, i)
-},30);
+// let i = 0;
+// // const rotate = g.create_rot(.1,.1,.1);
+// const rotate = g.create_rot(-.08,.1,-.06);
+// setInterval(()=>{
+// 	// model.v = g.mat_mul_4(model.v, rotate);
+// 	ctx.clearRect(0,0,ww,wh);
+// 	// npoly(ctx, ww, wh, 3+i*4, .1+i)
+// 	i += 0.005;
+// 	i -= floor(i);	
+// 	display(ctx, model, i)
+// },30);
