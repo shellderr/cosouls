@@ -2,6 +2,7 @@ const {cos, sin, sqrt, min, max, floor, round, random, PI} = Math;
 
 import lsystem from './l-system.js';
 import rules from './rules.js';
+import rules2 from './rules2.js';
 import * as g from './render.js';
 
 const ww = 500, wh = 500;
@@ -25,12 +26,14 @@ const rule = {
 	Y: '-FX'
 }
 
-const model = lsystem(rules[10], 5, 1, 20);
-model.v.forEach((v)=>{v[0]*=1.4; v[1]*=1.4;});
+// const model = lsystem(rules[10], 5, 1, 20);
+const model = lsystem(rules2[5], 3, 1, 0);
+// model.v.forEach((v)=>{v[0]*=1.4; v[1]*=1.4;});
 // radialSort(model);
 // yshift_bound(model, .7);
 
 display(ctx, model, 1);
+
 // npoly(ctx, ww, wh, 6, .1);
 
 function display(ctx, model, f){

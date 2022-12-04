@@ -184,7 +184,7 @@ function canvasrender(s, t){
             let a = el[0], b = el[1];   
             line(s.ctx, s.x, s.y, mat[a][0], mat[a][1], mat[b][0], mat[b][1]);
             // line(s.ctx, s.x, s.y, mat[a][0]+.2, mat[a][1]+.2, mat[b][0]+.2, mat[b][1]+.2);
-            // con tinue;
+            continue;
             let ms = [[-1, -2, 0, 1],
                      [.2, .2, 2, 1],
                      [.1, 2, .2, 1]];

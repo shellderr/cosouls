@@ -14,8 +14,7 @@ const turtle = {
 	delta: 8,
 	theta: PI*.5,
 	pos : [0,0,0,1],
-	dir: [0,-1,0,1],
-	dim: [400,400]
+	dir: [0,-1,0,1]
 };
 
 const routines = {
@@ -77,7 +76,7 @@ function sequence(rules, n, _rand){
 			if(rules[c] instanceof Array){
 				term = rules[c][Math.round(rand()*(rules[c].length-1))];
 			}else term = rules[c];
-			s += term || c;	
+			s +=  (term == undefined)? c : term;	
 		}
 		str = s;
 	}
@@ -131,7 +130,6 @@ function index(geom){
 export default function lsystem(rules, n=5, shift, rand=0, w=400, h=400){
 	turtle.geom = [];
 	turtle.stack = [];
-	turtle.dim = [w, h];
 	build(turtle, rules || defaultrule, n, rand);
 	let model = index(turtle.geom);
 	recenter(model.v, w, h, shift);
