@@ -26,13 +26,21 @@ const rule = {
 	Y: '-FX'
 }
 
-// const model = lsystem(rules[10], 5, 1, 20);
+// const model = lsystem(rules[8], 5, 1, 20);
 const model = lsystem(rules2[5], 3, 1, 0);
 // model.v.forEach((v)=>{v[0]*=1.4; v[1]*=1.4;});
 // radialSort(model);
 // yshift_bound(model, .7);
 
 display(ctx, model, 1);
+
+// model.v.forEach((v)=>{
+// 	v[0] = 0-v[0];
+// 	// v[1]*=1.4;
+// });
+
+// display(ctx, model, 1);
+
 
 // npoly(ctx, ww, wh, 6, .1);
 

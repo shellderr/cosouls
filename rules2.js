@@ -123,6 +123,14 @@ const arr = [
 	X: ['[FX-FY][-FX-FY-FX][ZZ]-FY-FX+FY+FX', '[FX-FY]-FF+FY+FX'],
 	Y: 'FY',
 	Z: '-FX-FY-FX'
+},
+{
+	theta: 45,
+	delta: 6,
+	axiom: 'F',
+	// F: 'F[+FF]F[-FF]F'
+	F: ['F[+FF]F[-FF]F', 'FF[+FF]F[-FFF]', 'F[+FFF]Z[-FF]F', 'F[+FFF]Z[-FF]F'],
+	Z: ['', '-', 'F[ZF]-']
 }
 
 ];
