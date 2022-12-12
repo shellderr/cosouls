@@ -18,6 +18,7 @@ var mirrorx = false;
 var mirrory = false;
 var dbl = .4;
 var amp = 1;
+var yofs = 0;
 
 const l_rot = g.create_rot(-.04,.05,-.03);
 
@@ -96,8 +97,8 @@ function mirror(a, b){
 
 function line(ctx, w, h, ax, ay, bx, by){
     ctx.beginPath();
-    ctx.moveTo(amp*ax*w*.5 +w*.5, amp*ay*h*.5+h*.5);
-    ctx.lineTo(amp*bx*w*.5 +w*.5, amp*by*h*.5+h*.5);
+    ctx.moveTo(amp*ax*w*.5 +w*.5, amp*(ay+yofs)*h*.5+h*.5);
+    ctx.lineTo(amp*bx*w*.5 +w*.5, amp*(by+yofs)*h*.5+h*.5);
     ctx.closePath();
     ctx.stroke();
 }
@@ -247,6 +248,13 @@ const gui = {
 	    	max: 1,
 	    	step: .01,
 	    	onChange: (v)=>{dbl = v; prog.ctl.frame();}
+	    },
+	    {
+	    	y_offset: yofs,
+	    	min: -1,
+	    	max: 1,
+	    	step: .01,
+	    	onChange: (v)=>{yofs = v; prog.ctl.frame();}
 	    }
     ]
 }
