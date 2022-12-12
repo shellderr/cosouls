@@ -19,7 +19,8 @@ function draw(){
 }
 
 function loop(time){
-    npoly(ctx, ww, wh, p_n, p_r);
+    if(pa) npoly(ctx, ww, wh, p_n, p_r, p_t, xa, ya);
+    if(pb) npoly(ctx, ww, wh, p_n2, p_r2, p_t2, xb, yb);
 }
 
 function npoly(ctx, ww, wh, n=6, r=1, t=0, x=0, y=0){

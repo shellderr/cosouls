@@ -35,7 +35,10 @@ function draw(){
 }
 
 function loop(time){
-
+    let m = scene.models[0];
+    let rot = g.create_rot(rotx*.04, roty*.04, rotz*.04);
+    m.vertices = g.mat_mul_4(m.vertices, rot);
+    g.canvasrender(scene);
 }
 
 function unloop(){
@@ -60,7 +63,16 @@ const gui = {
             }
         },
         {
-            rotx: 0,
+            scale: 1,
+            min: .1,
+            max: 1.9,
+            step: .1,
+            onChange: (v)=>{
+                scene.p_mat = g.create_proj(v,.5,.3);
+            }
+        },
+        {
+            rot_x: 0,
             min: -1,
             max: 1,
             step: .01,
@@ -70,7 +82,7 @@ const gui = {
             }
         },
         {
-            roty: 0,
+            rot_y: 0,
             min: -1,
             max: 1,
             step: .01,
@@ -80,7 +92,7 @@ const gui = {
             }
         },
         {
-            roty: 0,
+            rot_z: 0,
             min: -1,
             max: 1,
             step: .01,
@@ -137,6 +149,19 @@ const gui = {
             onChange: (v)=>{
                 translatez = v;
                 translate[3][2] = v;
+            }
+        },
+        {
+            reset: ()=>{
+                prog.gui.fields[1].ref.setValue(1);
+                prog.gui.fields[2].ref.setValue(0);
+                prog.gui.fields[3].ref.setValue(0);
+                prog.gui.fields[4].ref.setValue(0);
+                prog.gui.fields[5].ref.setValue(0);
+                prog.gui.fields[6].ref.setValue(0);
+                prog.gui.fields[7].ref.setValue(0);
+                prog.gui.fields[8].ref.setValue(0);
+                prog.gui.fields[9].ref.setValue(0);
             }
         }
     ]
