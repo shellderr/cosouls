@@ -142,10 +142,17 @@ function create_proj(scale, perspective, plane){
     return [[scale,0,0,0],[0,scale,0,0],[0,0,scale,-perspective],[0,0,0,plane]];
 }
 
-function create_canvas_scene(ctx, x, y, colors, vertices, elements, r_mat, t_mat, v_mat, p_mat){
+function create_canvas_scene(ctx, x, y, models, v_mat, p_mat){
+    let m = models instanceof Array ? models : [models];
     return {
-        ctx: ctx, x: x, y: y, colors: colors, vertices: vertices, elements: elements, r_mat : r_mat, t_mat: t_mat, v_mat: v_mat, p_mat: p_mat
+        ctx: ctx, x: x, y: y, models: m, v_mat: v_mat, p_mat: p_mat
     };
+}
+
+function create_model(colors, vertices, elements, r_mat, t_mat, v_mat){
+    return{
+        colors: colors, vertices: vertices, elements: elements, r_mat: r_mat, t_mat: t_mat, v_mat: v_mat
+    }
 }
 
 function create_ascii_scene(pre, x, y, vertices, elements, r_mat, t_mat, v_mat, p_mat){
@@ -162,7 +169,6 @@ function line(ctx, w, h, ax, ay, bx, by){
     ctx.stroke();
 }
 
-
 function intersectPlane(l0, l1, p0, n){
     let l = subv(l0, l1);
     let t = dot(subv(p0, l0), n) / dot(l, n);
@@ -170,41 +176,32 @@ function intersectPlane(l0, l1, p0, n){
 }
 
 function canvasrender(s, t){
-    s.ctx.fillStyle = s.colors.bkgd;
-    s.ctx.strokeStyle = s.colors.stroke;
-    s.ctx.fillRect(0,0,s.x, s.y);
-    s.vertices = s.r_mat ? mat_mul_4(s.vertices, s.r_mat) : s.vertices; 
-    let mat = mat_mul_4(s.vertices, s.t_mat || idmat);  
-    if(s.v_mat) mat = mat_mul_4(mat, s.v_mat);
-    if(s.p_mat) mat = mat_mul_4w(mat, s.p_mat);
+    // s.ctx.fillRect(0,0,s.x, s.y);
 
-    for(let el of s.elements){
-        let n = el.length;
-        if(n == 2){
-            let a = el[0], b = el[1];   
-            line(s.ctx, s.x, s.y, mat[a][0], mat[a][1], mat[b][0], mat[b][1]);
-            // line(s.ctx, s.x, s.y, mat[a][0]+.2, mat[a][1]+.2, mat[b][0]+.2, mat[b][1]+.2);
-            // con tinue;
-            let ms = [[-1, -2, 0, 1],
-                     [.2, .2, 2, 1],
-                     [.1, 2, .2, 1]];
-            // ms = mat_mul_4(ms, s.v_mat)
-            // ms = mat_mul_4(ms, s.p_mat)
-            let l0 = ms[0];
-            let p0 = ms[1];
-            let np = ms[2];
-           
-            let aa = intersectPlane(l0, mat[a], p0, np);
-            let bb = intersectPlane(l0, mat[b], p0, np);
-            line(s.ctx, s.x, s.y, aa[0], aa[1], bb[0], bb[1]);
-            // line(s.ctx, s.x, s.y, l0[0], l0[1], bb[0], bb[1]);
-            // line(s.ctx, s.x, s.y, l0[0], l0[1], bb[0], bb[1]);
+    for(let m of s.models){
+        // s.ctx.fillStyle = m.colors.bkgd;
+        // s.ctx.strokeStyle = m.colors.stroke;
 
+        let mat = m.r_mat ? mat_mul_4(m.vertices, m.r_mat) : m.vertices; 
+        mat = m.t_mat ? mat_mul_4(mat, m.t_mat) : mat;  
 
-        }else if(n > 2){
-            for(let i = 0; i < n; i++){
-                let a = el[i], b = el[(i+1)%n];
+        // m.vertices = m.r_mat ? mat_mul_4(m.vertices, m.r_mat) : m.vertices; 
+        // let mat = m.t_mat ? mat_mul_4(m.vertices, m.t_mat) : m.vertices;  
+        if(m.v_mat) mat = mat_mul_4(mat, m.v_mat);
+        if(s.p_mat) mat = mat_mul_4w(mat, s.p_mat);
+
+        for(let el of m.elements){
+            let n = el.length;
+            if(n == 2){
+                let a = el[0], b = el[1];  
+                // if(Math.max(mat[a][2], mat[b][2]) < -.3)  
                 line(s.ctx, s.x, s.y, mat[a][0], mat[a][1], mat[b][0], mat[b][1]);
+
+            }else if(n > 2){
+                for(let i = 0; i < n; i++){
+                    let a = el[i], b = el[(i+1)%n];
+                    line(s.ctx, s.x, s.y, mat[a][0], mat[a][1], mat[b][0], mat[b][1]);
+                }
             }
         }
     }
@@ -254,4 +251,4 @@ function asciirender(s, t){
     s.pre.innerHTML = str;
 }
 
-export{mat_mul_4, mult_rows, proc_rows, create_rot, create_canvas_scene, create_ascii_scene, create_scale, create_translate, create_proj, lookAt, asciirender, canvasrender};
+export{mat_mul_4, mult_rows, proc_rows, create_rot, create_canvas_scene, create_model, create_ascii_scene, create_scale, create_translate, create_proj, lookAt, asciirender, canvasrender};

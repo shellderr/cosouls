@@ -12,7 +12,13 @@
 	</style>
 </head>
 <body>
-<canvas id="canv"></canvas>
-<script src="main.js" type="module"></script>
+<div style="position: relative;">
+ <canvas id="disp" width="400" height="400" 
+   style="position: absolute; left: 0; top: 0; z-index: 0;"></canvas>
+ <canvas id="disp2" width="400" height="400" 
+   style="position: absolute; left: 0; top: 0; z-index: 1;"></canvas>
+</div>
+
+<script src="main2.js" type="module"></script>
 </body>
 </html>

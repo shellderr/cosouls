@@ -79,6 +79,22 @@ const arr = [
 	F: 'FF-[XY]+[XY]',
 	X: '+F+--X+Y',
 	Y: '-FX'
+},
+{
+	axiom: 'F',
+	theta: 60,
+	delta: 4,
+	F: ['FF-[XY]+[XY]', 'FYF-[XY]+[--XY]'],
+	X: '+F+--X+Y',
+	Y: '-FX'
+},
+{
+	axiom: 'F',
+	theta: 60,
+	delta: 4,
+	F: ['F[F-[XY]+[XY]]','FF-[XY]+[XY]', 'FYF-[XY]+[--XY]'],
+	X: '+F+--X+Y',
+	Y: ['-FX', 'FYX']
 }
 
 ];

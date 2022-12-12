@@ -57,24 +57,54 @@ const routines = {
 	}
 }
 
-function sequence(rules, n){
+function mulberry32(a) {
+    return function() {
+      var t = a += 0x6D2B79F5;
+      t = Math.imul(t ^ t >>> 15, t | 1);
+      t ^= t + Math.imul(t ^ t >>> 7, t | 61);
+      return ((t ^ t >>> 14) >>> 0) / 4294967296;
+    }
+}
+
+function seedRand(s) {
+    var mask = 0xffffffff;
+    var m_w  = (123456789 + s) & mask;
+    var m_z  = (987654321 - s) & mask;
+
+    return function() {
+      m_z = (36969 * (m_z & 65535) + (m_z >>> 16)) & mask;
+      m_w = (18000 * (m_w & 65535) + (m_w >>> 16)) & mask;
+
+      var result = ((m_z << 16) + (m_w & 65535)) >>> 0;
+      result /= 4294967296;
+      return result;
+    }
+}
+
+function sequence(rules, n, _rand){
 	let str = rules.axiom;
+	let rand = _rand ? mulberry32(_rand) : Math.random;
 	for(let i = 0; i < n; i++){
 		let s = '';
 		for(let c of str){
 			let term = null;
 			if(rules[c] instanceof Array){
-				term = rules[c][Math.round(Math.random()*(rules[c].length-1))];
+				term = rules[c][Math.round(rand()*(rules[c].length-1))];
 			}else term = rules[c];
-			s += term || c;	
+			s +=  (term == undefined)? c : term;	
 		}
 		str = s;
 	}
 	return str;
 }
 
-function build(turtle, rules, n){
-	let s = sequence(rules, n || 2);
+function build(turtle, rules, n, rand=0){ 
+	turtle.pos = [0,0,0,1];
+	turtle.dir = [0,-1,0,1];
+	turtle.geom = [];
+	turtle.stack = [];
+	if(n==0) n = rules.n ? rules.n : 3;
+	let s = sequence(rules, n, rand);
 	if(rules.theta) turtle.theta = rules.theta * (PI/180);
 	if(rules.delta) turtle.delta = rules.delta;
 	for(let c of s)
@@ -87,10 +117,10 @@ function normalize(v, w, h){
 			(2.*v[2]-h)/h,1];
 }
 
-function recenter(geom, x, y){ 
+function recenter(geom, x, y, shift=true){ 
 	let cx = 0, cy = 0, cz = 0;
 	for(let i = 0; i < geom.length; i++){
-		geom[i] = normalize(geom[i], x || 500, y || 500);
+		geom[i] = normalize(geom[i], x, y);
 		cx += geom[i][0];
 		cy += geom[i][1];
 		cz += geom[i][2];
@@ -98,6 +128,7 @@ function recenter(geom, x, y){
 	cx /= geom.length;
 	cy /= geom.length;
 	cz /= geom.length;
+	if(!shift){cx = cy = cz = -1;}
 	for(let i = 0; i < geom.length; i++){
 		geom[i][0] -=cx;
 		geom[i][1] -=cy;
@@ -116,12 +147,12 @@ function index(geom){
 	return {v: vertices, i: indices}
 }
 
-export default function lsystem(rules, n){
+export default function lsystem(rules, n=3, shift, rand=0, w=400, h=400){
 	turtle.geom = [];
 	turtle.stack = [];
-	build(turtle, rules || defaultrule, n || 5);
+	build(turtle, rules || defaultrule, n, rand);
 	let model = index(turtle.geom);
-	recenter(model.v, 400, 400);
+	recenter(model.v, w, h, shift);
 	return model;
 }
 
