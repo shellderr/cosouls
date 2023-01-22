@@ -7,16 +7,16 @@ import rules from '../resource/selectrules.js';
 
 var model;
 var lev = 1;
-var rule =  0;
+var rule =  1;
 var n_i = 0; //use default n
 var rot_n = 4;
 var theta = 0;
 var draw_mod = repeat_rot; //null
 var recenter = false;
-var seed = 22; //0=random
-var mirrorx = false;
+var seed = 0; //0=random
+var mirrorx = true;
 var mirrory = false;
-var dbl = .4;
+var sep = 0;
 var amp = 1;
 var yofs = 0;
 
@@ -56,15 +56,15 @@ function line_m(a, b, x, y){
 	}
 	if(x){
 		let m = [-1,1,1,1];
-		line(ctx, ww, wh, a[0]-dbl, a[1], b[0]-dbl, b[1]);	
+		line(ctx, ww, wh, a[0]-sep, a[1], b[0]-sep, b[1]);	
 		let aa = multv(a, m), bb = multv(b, m)
-		line(ctx, ww, wh, aa[0]+dbl, aa[1], bb[0]+dbl, bb[1]);		
+		line(ctx, ww, wh, aa[0]+sep, aa[1], bb[0]+sep, bb[1]);		
 	}
 	if(y){
 		let m = [1,-1,1,1];
-		line(ctx, ww, wh, a[0], a[1]-dbl, b[0], b[1]-dbl);	
+		line(ctx, ww, wh, a[0], a[1]-sep, b[0], b[1]-sep);	
 		let aa = multv(a, m), bb = multv(b, m)
-		line(ctx, ww, wh, aa[0], aa[1]+dbl, bb[0], bb[1]+dbl);
+		line(ctx, ww, wh, aa[0], aa[1]+sep, bb[0], bb[1]+sep);
 	}
 }
 
@@ -90,9 +90,9 @@ function repeat_rot(a, b){
 
 function mirror(a, b){
 	let m = [1,-1,1,1];
-	line(ctx, ww, wh, a[0]-dbl, a[1], b[0]-dbl, b[1]);	
+	line(ctx, ww, wh, a[0]-sep, a[1], b[0]-sep, b[1]);	
 	let aa = multv(a, m), bb = multv(b, m)
-	line(ctx, ww, wh, aa[0]+dbl, aa[1], bb[0]+dbl, bb[1]);	
+	line(ctx, ww, wh, aa[0]+sep, aa[1], bb[0]+sep, bb[1]);	
 }
 
 function line(ctx, w, h, ax, ay, bx, by){
@@ -243,11 +243,11 @@ const gui = {
 	    	onChange: (v)=>{mirrory = v; prog.ctl.frame();}
 	    },
 	    {
-	    	seperation: dbl,
+	    	seperation: sep,
 	    	min: 0,
 	    	max: 1,
 	    	step: .01,
-	    	onChange: (v)=>{dbl = v; prog.ctl.frame();}
+	    	onChange: (v)=>{sep = v; prog.ctl.frame();}
 	    },
 	    {
 	    	y_offset: yofs,
