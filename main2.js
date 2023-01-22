@@ -7,7 +7,7 @@ import geom from "./programs/g_module.js";
 const pgm = [linemod, geom, lsys];
 const lineview = new Lineview(document.querySelector('#disp'), pgm, 500, 500);
 var _v = 230;
-var _lw = 2;
+var _lw = 1.4;
 var _h = 0, _s = 0, _l = .9, _a = 1;
 var _sh = 0, _ss = 0, _sl = 0, _sa = 1;
 const guiprog = {
@@ -22,7 +22,7 @@ const guiprog = {
     },
     {
         strokewidth: _lw, min: .1, max: 3, step: .1,
-        onChange: (v)=>{ lineview.ctx.lineWidth = v; lineview.frame(); }
+        onChange: (v)=>{ lineview.lineWidth(v); lineview.frame(); }
     }
     ],
     folders:[
@@ -97,4 +97,6 @@ lineview.canvasStyle({
     // width: '50vw',
     // height: '50vw'
 });
+lineview.lineWidth(_lw);
+lineview.frame();
 lineview.initGui(new dat.GUI(), guiprog);

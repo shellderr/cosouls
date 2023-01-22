@@ -48,6 +48,9 @@ class Lineview{
             this.ctx.strokeStyle = h;
         else this.ctx.strokeStyle = hlsaStr(h, s, l, a);
     }
+    lineWidth(w){
+        this.ctx.lineWidth = w; 
+    }
 
     initGui(gui, mainObj){
         if(!gui) return;

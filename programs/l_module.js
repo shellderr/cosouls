@@ -189,7 +189,7 @@ const gui = {
 	    {
 	    	seed: seed,
 	    	onChange: (v)=>{
-	    		seed = v;
+	    		seed = v ? v : Math.random()*99+1;
 	    		model = buildModel();
 	    		prog.ctl.frame();
 	    	}
