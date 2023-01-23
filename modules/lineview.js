@@ -11,8 +11,8 @@ class Lineview{
         this.pgms = (pgms instanceof Array)? pgms : [pgms];
         this.loop = this.loop.bind(this);
         this.running = false;   
-        this.fill = this.canvas.style.backgroundColor;
-        this.stroke = "#000000";
+        this.fill = {r:0,g:0,b:0,a:1};
+        this.stroke = {r:0,g:0,b:0,a:1};
         window.lineview = this;
         this.init();
         this.initGui(gui);
@@ -21,18 +21,39 @@ class Lineview{
 
     init(){
         for(let p of this.pgms){
-            p.setup(this.ctx, this.w, this.h);
+            p.setup(this.ctx, this.w, this.h, this);
             p.on = p.on == undefined ? true : p.on;
         } 
     }
 
     draw(){
         this.ctx.clearRect(0, 0, this.w, this.h);
+        // this.ctx.fillRect(0, 0, this.w, this.h);
         for(let p of this.pgms) if(p.on) p.draw();
     }
 
     frame(){
         if(!this.running) this.draw();
+    }
+
+    start(){
+        this.running = true;
+        this.loopid = requestAnimationFrame(this.loop);
+    }
+
+    stop(){
+        this.running = false;
+        cancelAnimationFrame(this.loopid);
+        for(let p of this.pgms) if(p.on && p.unloop) p.unloop();
+        // this.frame();
+    }
+
+    loop(time){
+        this.ctx.clearRect(0, 0, this.w, this.h);
+        // this.ctx.fillRect(0, 0, this.w, this.h);
+        for(let p of this.pgms) if(p.on && p.loop) p.loop(time);
+        if(this.running)
+            this.loopid = requestAnimationFrame(this.loop);
     }
 
     canvasStyle(css){
@@ -46,9 +67,21 @@ class Lineview{
     setStroke(h=0, s=0, l=0, a=1){
         if(typeof h == 'string')
             this.ctx.strokeStyle = h;
-        else this.ctx.strokeStyle = hlsaStr(h, s, l, a);
+        else {
+            this.stroke = hlsa(h, s, l, a);
+            this.ctx.strokeStyle = rgbStr(this.stroke);
+        }
     }
-    lineWidth(w){
+    setFill(h=0, s=0, l=0, a=1){
+        if(typeof h == 'string')
+            this.ctx.fillStyle = h;
+        else {
+            this.fill = hlsa(h, s, l, a);
+            this.ctx.fillStyle = rgbStr(this.fill);        
+        }
+    }
+
+    setLineWidth(w){
         this.ctx.lineWidth = w; 
     }
 
@@ -80,25 +113,16 @@ class Lineview{
         for(let p of this.pgms) initSubGui(gui, p, this);
     }
 
-    start(){
-        this.running = true;
-        this.loopid = requestAnimationFrame(this.loop);
-    }
+}
+function hlsa(h, s, l, a){
+    let v = hsl2rgb(h*360, s, l);
+    let o = {r: v[0], g: v[1], b: v[2], a: a};
+    o.str = `rgba(${v[0]*255}, ${v[1]*255}, ${v[2]*255}, ${a})`;
+    return o;
+}
 
-    stop(){
-        this.running = false;
-        cancelAnimationFrame(this.loopid);
-        for(let p of this.pgms) if(p.on && p.unloop) p.unloop();
-        this.frame();
-    }
-
-    loop(time){
-        this.ctx.clearRect(0, 0, this.w, this.h);
-        for(let p of this.pgms) if(p.on && p.loop) p.loop(time);
-        if(this.running)
-            this.loopid = requestAnimationFrame(this.loop);
-    }
-
+function rgbStr(o) {
+    return`rgba(${o.r*255}, ${o.g*255}, ${o.b*255}, ${o.a})`;
 }
 
 function hlsaStr(h, s, l, a){

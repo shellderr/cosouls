@@ -1,5 +1,5 @@
 const {cos, sin, sqrt, min, max, floor, round, random, PI} = Math;
-var ctx, ww, wh;
+var ctx, ctl, ww, wh;
 
 import lsystem from '../resource/l-system.js';
 import * as g from '../resource/render.js';
@@ -19,17 +19,25 @@ var mirrory = false;
 var sep = 0;
 var amp = 1;
 var yofs = 0;
+var stroke_a = {h:0,s:0,l:0,a:1,str:'rgba(0,0,0,1)'};
+var stroke_b = {h:0,s:0,l:0,a:.1,str:'rgba(0,0,0,.1)'};
+var stroke_c = {h:0,s:0,l:0,a:1,str:'rgba(0,0,0,1)'};
+var shadowblur = 0;
+var ghost = false;
 
 const l_rot = g.create_rot(-.04,.05,-.03);
+const g_rot = g.create_rot(-.08,.1,-.07);
 
-function setup(_ctx, _w, _h){
-    ctx = _ctx; ww = _w; wh = _h;
-    ctx.lineWidth = 2;
+function setup(_ctx, _w, _h, _ctl){
+    ctx = _ctx; ww = _w; wh = _h; ctl = _ctl;
     model = buildModel();
 }
 
 function draw(){
+	ctx.shadowColor = stroke_c.str;
+	ctx.shadowBlur = shadowblur;
 	display(ctx, model, lev, draw_mod);
+	if(ghost)display_blur(ctx, model, lev, draw_mod);
 }
 
 function loop(time){
@@ -43,6 +51,17 @@ function unloop(){
 
 function buildModel(){
 	return lsystem(rules[rule], n_i, recenter, seed);
+}
+
+function hsl2rgb(h,s,l) { // https://stackoverflow.com/a/64090995
+   let a=s*Math.min(l,1-l);
+   let f= (n,k=(n+h/30)%12) => l - a*Math.max(Math.min(k-3,9-k,1),-1);
+   return [f(0),f(8),f(4)];
+} 
+
+function hslstr(o){
+    let v = hsl2rgb(o.h*360, o.s, o.l);
+    o.str = `rgba(${v[0]*255}, ${v[1]*255}, ${v[2]*255}, ${o.a})`;
 }
 
 function _line(a, b){
@@ -69,6 +88,7 @@ function line_m(a, b, x, y){
 }
 
 function display(ctx, model, f, cb){
+	ctx.strokeStyle = stroke_a.str;
 	const n = max(floor(model.i.length*f),1);
 	for(let i = 0; i < n; i++){
 		let a = model.v[model.i[i][0]];
@@ -76,6 +96,21 @@ function display(ctx, model, f, cb){
 		if(cb){cb(a, b)}
 		else _line(a, b);		
 	}
+}
+
+function display_blur(ctx, model, f, cb){
+	ctx.strokeStyle = stroke_b.str;
+	const n = max(floor(model.i.length*f),1);
+	let m = g.mat_mul_4(model.v, g.idmat);	
+	for(let j = 0; j < 8; j++){
+		m = g.mat_mul_4(m, g_rot);
+		for(let i = 0; i < n; i++){
+			let a = m[model.i[i][0]];
+			let b = m[model.i[i][1]];
+			if(cb){cb(a, b)}
+			else _line(a, b);		
+		}
+	}		
 }
 
 function repeat_rot(a, b){
@@ -142,6 +177,155 @@ const gui = {
     open: true,
     switch: true,
     // updateFame: true,
+    folders:[
+    	{
+    	name: 'color',
+    	fields:[
+    		{
+    			h: stroke_a.h,
+    			min: 0,
+    			max: 1,
+    			step: .1,
+    			onChange: (v)=>{
+    				stroke_a.h = v;
+    				hslstr(stroke_a);
+    				ctl.frame();
+    			}
+    		},
+    		{
+    			s: stroke_a.s,
+    			min: 0,
+    			max: 1,
+    			step: .1,
+    			onChange: (v)=>{
+    				stroke_a.s = v;
+    				hslstr(stroke_a);
+    				ctl.frame();
+    			}
+    		},
+    		{
+    			l: stroke_a.l,
+    			min: 0,
+    			max: 1,
+    			step: .1,
+    			onChange: (v)=>{
+    				stroke_a.l = v;
+    				hslstr(stroke_a);
+    				ctl.frame();
+    			}
+    		},
+    		{
+    			a: stroke_a.a,
+    			min: 0,
+    			max: 1,
+    			step: .1,
+    			onChange: (v)=>{
+    				stroke_a.a = v;
+    				hslstr(stroke_a);
+    				ctl.frame();
+    			}
+    		}
+    	]
+    	},
+    	{
+    	name: 'ghost-color',
+    	fields:[
+    		{
+    			h: stroke_b.h,
+    			min: 0,
+    			max: 1,
+    			step: .1,
+    			onChange: (v)=>{
+    				stroke_b.h = v;
+    				hslstr(stroke_b);
+    				ctl.frame();
+    			}
+    		},
+    		{
+    			s: stroke_b.s,
+    			min: 0,
+    			max: 1,
+    			step: .1,
+    			onChange: (v)=>{
+    				stroke_b.s = v;
+    				hslstr(stroke_b);
+    				ctl.frame();
+    			}
+    		},
+    		{
+    			l: stroke_b.l,
+    			min: 0,
+    			max: 1,
+    			step: .1,
+    			onChange: (v)=>{
+    				stroke_b.l = v;
+    				hslstr(stroke_b);
+    				ctl.frame();
+    			}
+    		},
+    		{
+    			a: stroke_b.a,
+    			min: 0,
+    			max: .5,
+    			step: .01,
+    			onChange: (v)=>{
+    				stroke_b.a = v;
+    				hslstr(stroke_b);
+    				ctl.frame();
+    			}
+    		}
+    	]
+    	},
+    	{
+    	name: 'shadow-color',
+    	fields:[
+    		{
+    			h: stroke_c.h,
+    			min: 0,
+    			max: 1,
+    			step: .1,
+    			onChange: (v)=>{
+    				stroke_c.h = v;
+    				hslstr(stroke_c);
+    				ctl.frame();
+    			}
+    		},
+    		{
+    			s: stroke_c.s,
+    			min: 0,
+    			max: 1,
+    			step: .1,
+    			onChange: (v)=>{
+    				stroke_c.s = v;
+    				hslstr(stroke_c);
+    				ctl.frame();
+    			}
+    		},
+    		{
+    			l: stroke_c.l,
+    			min: 0,
+    			max: 1,
+    			step: .1,
+    			onChange: (v)=>{
+    				stroke_c.l = v;
+    				hslstr(stroke_c);
+    				ctl.frame();
+    			}
+    		},
+    		{
+    			a: stroke_c.a,
+    			min: 0,
+    			max: .5,
+    			step: .01,
+    			onChange: (v)=>{
+    				stroke_c.a = v;
+    				hslstr(stroke_c);
+    				ctl.frame();
+    			}
+    		}
+    	]
+    	}
+    ],
     fields:[
     	{
     		rule: rule,
@@ -151,7 +335,7 @@ const gui = {
     		onChange: (v)=>{
     			rule = v;
     			model = buildModel();
-    			prog.ctl.frame();
+    			ctl.frame();
     		}
 
     	},
@@ -163,7 +347,7 @@ const gui = {
 	        onChange : (v)=>{
 	            n_i = v;
 	            model = buildModel();
-	            prog.ctl.frame();
+	            ctl.frame();
 	        }
 	    },
 	    {
@@ -173,17 +357,17 @@ const gui = {
 	        step: 0.01,
 	        onChange : (v)=>{
 	            lev = ease(v);
-	            prog.ctl.frame();
+	            ctl.frame();
 	        }
 	    },
 	    {
 	        amp: amp,
-	        min: 1,
+	        min: .5,
 	        max: 2,
 	        step: 0.01,
 	        onChange : (v)=>{
 	            amp = v;
-	            prog.ctl.frame();
+	            ctl.frame();
 	        }
 	    },
 	    {
@@ -191,7 +375,7 @@ const gui = {
 	    	onChange: (v)=>{
 	    		seed = v ? v : Math.random()*99+1;
 	    		model = buildModel();
-	    		prog.ctl.frame();
+	    		ctl.frame();
 	    	}
 	    },
 	    {
@@ -203,7 +387,7 @@ const gui = {
 	    	repeat_rot: (draw_mod? true:false),
 	    	onChange: (v)=>{
 	    		draw_mod = v? repeat_rot:null;
-	    		prog.ctl.frame();
+	    		ctl.frame();
 	    	}
 	    },
 	    {
@@ -213,7 +397,7 @@ const gui = {
 	    	step: 1,
 	    	onChange: (v)=>{
 	    		rot_n = v;
-	    		prog.ctl.frame();
+	    		ctl.frame();
 	    	}
 	    },
 	    {
@@ -223,7 +407,7 @@ const gui = {
 	    	step: floor(PI*250)/1000,
 	    	onChange: (v)=>{
 	    		theta = v;
-	    		prog.ctl.frame();
+	    		ctl.frame();
 	    	}
 	    },
 	    {
@@ -231,31 +415,59 @@ const gui = {
 	    	onChange: (v)=>{
 	    		recenter = v;
 	    		model = buildModel();
-	    		prog.ctl.frame();
+	    		ctl.frame();
 	    	}
 	    },
 	    {
 	    	mirrorx: mirrorx,
-	    	onChange: (v)=>{mirrorx = v; prog.ctl.frame();}
+	    	onChange: (v)=>{mirrorx = v; ctl.frame();}
 	    },
 	    {
 	    	mirrory: mirrory,
-	    	onChange: (v)=>{mirrory = v; prog.ctl.frame();}
+	    	onChange: (v)=>{mirrory = v; ctl.frame();}
 	    },
 	    {
 	    	seperation: sep,
 	    	min: 0,
 	    	max: 1,
 	    	step: .01,
-	    	onChange: (v)=>{sep = v; prog.ctl.frame();}
+	    	onChange: (v)=>{sep = v; ctl.frame();}
+	    },
+	    // {
+	    // 	y_offset: yofs,
+	    // 	min: -1,
+	    // 	max: 1,
+	    // 	step: .01,
+	    // 	onChange: (v)=>{yofs = v; ctl.frame();}
+	    // },
+	    {
+	    	shadow_blur: shadowblur,
+	    	min: 0,
+	    	max: 30,
+	    	step: 1,
+	    	onChange: (v)=>{
+	    		shadowblur = v;
+	    		ctl.frame();
+	    	}
+
 	    },
 	    {
-	    	y_offset: yofs,
-	    	min: -1,
-	    	max: 1,
-	    	step: .01,
-	    	onChange: (v)=>{yofs = v; prog.ctl.frame();}
-	    }
+	    	ghost_blur: ghost, onChange: (v)=>{
+	    		ghost = v;
+	    		ctl.frame();
+	    	}
+	    },
+		{
+			ghost_blur_alpha: stroke_b.a,
+			min: 0,
+			max: .5,
+			step: .01,
+			onChange: (v)=>{
+				stroke_b.a = v;
+				hslstr(stroke_b);
+				ctl.frame();
+			}
+		}
     ]
 }
 

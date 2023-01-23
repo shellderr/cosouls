@@ -251,4 +251,4 @@ function asciirender(s, t){
     s.pre.innerHTML = str;
 }
 
-export{mat_mul_4, mult_rows, proc_rows, create_rot, create_canvas_scene, create_model, create_ascii_scene, create_scale, create_translate, create_proj, lookAt, asciirender, canvasrender};
+export{mat_mul_4, mult_rows, proc_rows, create_rot, create_canvas_scene, create_model, create_ascii_scene, create_scale, create_translate, create_proj, lookAt, asciirender, canvasrender, idmat};

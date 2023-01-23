@@ -22,7 +22,7 @@ const guiprog = {
     },
     {
         strokewidth: _lw, min: .1, max: 3, step: .1,
-        onChange: (v)=>{ lineview.lineWidth(v); lineview.frame(); }
+        onChange: (v)=>{ lineview.setLineWidth(v); lineview.frame(); }
     }
     ],
     folders:[
@@ -34,6 +34,7 @@ const guiprog = {
                     onChange: (v)=>{
                         _h = v;
                         lineview.setBkgd(_h, _s, _l, _a);
+                        lineview.frame();
                     }
                 },
                 {
@@ -41,6 +42,7 @@ const guiprog = {
                     onChange: (v)=>{
                         _s = v;
                         lineview.setBkgd(_h, _s, _l, _a);
+                        lineview.frame();
                     }
                 },
                 {
@@ -48,6 +50,7 @@ const guiprog = {
                     onChange: (v)=>{
                         _l = v;
                         lineview.setBkgd(_h, _s, _l, _a);
+                        lineview.frame();
                     }
                 },
                 {
@@ -55,6 +58,7 @@ const guiprog = {
                     onChange: (v)=>{
                         _a = v;
                         lineview.setBkgd(_h, _s, _l, _a);
+                        lineview.frame();
                     }
                 }
             ]
@@ -97,6 +101,7 @@ lineview.canvasStyle({
     // width: '50vw',
     // height: '50vw'
 });
-lineview.lineWidth(_lw);
+// lineview.setFill(_h, _s, _l, _a);
+lineview.setLineWidth(_lw)
 lineview.frame();
 lineview.initGui(new dat.GUI(), guiprog);
