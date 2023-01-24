@@ -14,12 +14,16 @@ class Lineview{
         this.fill = {r:0,g:0,b:0,a:1};
         this.stroke = {r:0,g:0,b:0,a:1};
         window.lineview = this;
-        this.init();
+    }
+
+    init(gui, cb){
+        if(cb)cb(this);
+        this.setup();
         this.initGui(gui);
         this.draw();
     }
 
-    init(){
+    setup(){
         for(let p of this.pgms){
             p.setup(this.ctx, this.w, this.h, this);
             p.on = p.on == undefined ? true : p.on;
