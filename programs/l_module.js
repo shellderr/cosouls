@@ -6,11 +6,11 @@ import * as g from '../resource/render.js';
 import rules from '../resource/selectrules.js';
 
 var model;
-var _lev = .5;
+var _lev = .6;
 var lev =  ease(_lev);
 var rule =  1;
 var n_i = 0; //use default n
-var rot_n = 4;
+var rot_n = 5;
 var theta = 0;
 var draw_mod = repeat_rot; //null
 var recenter = false;

@@ -786,11 +786,11 @@
    var ctx$1, ww$1, wh$1;
 
    var model$1;
-   var _lev = .5;
+   var _lev = .6;
    var lev =  ease(_lev);
    var rule =  1;
    var n_i = 0; //use default n
-   var rot_n = 4;
+   var rot_n = 5;
    var theta = 0;
    var draw_mod = repeat_rot; //null
    var recenter = false;
