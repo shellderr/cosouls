@@ -4,12 +4,30 @@ import linemod from "./programs/p_module.js";
 import lsys from "./programs/l_module.js";
 import geom from "./programs/g_module.js";
 
-const pgm = [linemod, geom, lsys];
-const lineview = new Lineview(document.querySelector('#disp'), pgm, 500, 500);
+import { Glview } from "./modules/glview.js";
+
+import bkgd from "./programs/bkgd.js";
+import waves from "./programs/waves.js";
+import meta from "./programs/metaball.js";
+
+const wpgm = bkgd;
+wpgm.chain = [waves];
+
+const disp1 = document.querySelector('#disp');
+const disp2 = document.querySelector('#disp2')
+
+const _gui = new dat.GUI();
+
+const glview = new Glview(disp1, wpgm, [500,500],0,0,0);
+glview.initGui(_gui);
+glview.start(1)
+
+const pgm = [ geom, lsys];
+const lineview = new Lineview(disp2, pgm, 500, 500);
 var _v = 0;
-var _lw = .6;
-var _h = 0, _s = 0, _l = .9, _a = 1;
-var _sh = .53, _ss = 1, _sl = .5, _sa = 1;
+var _lw = .5;
+var _h = 0, _s = 0, _l = .9, _a = 0;
+var _sh = .24, _ss = .7, _sl = .5, _sa = 1;
 const guiprog = {
     name: 'main',
     fields:[
@@ -100,4 +118,4 @@ lineview.canvasStyle({
 lineview.lineWidth(_lw);
 lineview.setStroke(_sh, _ss, _sl, _sa);
 lineview.start();
-lineview.initGui(new dat.GUI(), guiprog);
+lineview.initGui(_gui);

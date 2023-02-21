@@ -8,13 +8,13 @@ var ctx, ww, wh;
 var obj, obj2, rot, rot2, proj, translate, view, colors, model, gmodels, scene;
 var p_i = 0;
 var viewx = 0, viewy = 0;
-var translatex = 0, translatey = 0, translatez = 0;
-var rotx = -.18;
-var roty = .31;
-var rotz = .22;
+var translatex = 0, translatey = 0, translatez = -.5;
+var rotx = -.11;
+var roty = -.11;
+var rotz = .1;
 var rr = PI;
-var scale = 1.3;
-var idx = 0;
+var scale = 1.5;
+var idx = 8;
 
 function setup(_ctx, _w, _h){
     ctx = _ctx;  ww = _w; wh = _h;
@@ -22,6 +22,7 @@ function setup(_ctx, _w, _h){
     obj = load(polyhedra, idx)
     rot = g.create_rot(rotx*rr, roty*rr, rotz*rr);
     translate = [[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,1]];
+    translate[3][2] = translatez;
     proj = g.create_proj(scale,.5,.3);
     view = g.lookAt([viewx*1, viewy*1, -1.], [0,0, .1], .0);
     model = g.create_model(0, obj.v, obj.i, rot, translate, view);
@@ -106,46 +107,26 @@ const gui = {
                 scene.models[0].r_mat = g.create_rot(rotx*rr, roty*rr, rotz*rr);
             }
         },
-        {
-            view_x: viewx,
-            min:-1,
-            max:1,
-            step:.01,
-            onChange: (v)=>{
-                viewx = v*4;
-                scene.models[0].v_mat = g.lookAt([viewx, viewy, -1.], [0,0, .2], .08);
-            }
-        },
-        {
-            view_y: viewy,
-            min:-1,
-            max:1,
-            step:.01,
-            onChange: (v)=>{
-                viewy = v*4;
-                scene.models[0].v_mat = g.lookAt( [viewx, viewy, -1.], [0,0, .2], .08);
-            }
-        },
-        {
-            translate_x: translatex,
-            min:-1,
-            max:1,
-            step:.01,
-            onChange: (v)=>{
-                translatex = v;
-                translate[3][0] = v;
-            }
-        },
-        {
-            translate_y: translatey,
-            min:-1,
-            max:1,
-            step:.01,
-            onChange: (v)=>{
-                translatey = v;
-                translate[3][1] = v;
-            }
-        },
+        // {
+        //     translate_x: translatex,
+        //     min:-1,
+        //     max:1,
+        //     step:.01,
+        //     onChange: (v)=>{
+        //         translatex = v;
+        //         translate[3][0] = v;
+        //     }
+        // },
+        // {
+        //     translate_y: translatey,
+        //     min:-1,
+        //     max:1,
+        //     step:.01,
+        //     onChange: (v)=>{
+        //         translatey = v;
+        //         translate[3][1] = v;
+        //     }
+        // },
         {
             translate_z: translatez,
             min:-1,
