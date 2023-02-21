@@ -6,18 +6,19 @@ import * as g from '../resource/render.js';
 import rules from '../resource/selectrules.js';
 
 var model;
-var lev = 1;
-var rule =  0;
+var _lev = .5;
+var lev =  ease(_lev);
+var rule =  1;
 var n_i = 0; //use default n
 var rot_n = 4;
 var theta = 0;
 var draw_mod = repeat_rot; //null
 var recenter = false;
-var seed = 22; //0=random
-var mirrorx = false;
+var seed = 0;//22; //0=random
+var mirrorx = true;
 var mirrory = false;
-var dbl = .4;
-var amp = 1;
+var dbl = 0;//.4;
+var amp = .7;
 var yofs = 0;
 
 const l_rot = g.create_rot(-.04,.05,-.03);
@@ -167,7 +168,7 @@ const gui = {
 	        }
 	    },
 	    {
-	        level: 1,
+	        level: _lev,
 	        min: .0,
 	        max: 1,
 	        step: 0.01,
@@ -178,7 +179,7 @@ const gui = {
 	    },
 	    {
 	        amp: amp,
-	        min: 1,
+	        min: .5,
 	        max: 2,
 	        step: 0.01,
 	        onChange : (v)=>{

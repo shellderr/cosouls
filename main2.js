@@ -6,15 +6,15 @@ import geom from "./programs/g_module.js";
 
 const pgm = [linemod, geom, lsys];
 const lineview = new Lineview(document.querySelector('#disp'), pgm, 500, 500);
-var _v = 230;
-var _lw = 1.4;
+var _v = 0;
+var _lw = .6;
 var _h = 0, _s = 0, _l = .9, _a = 1;
-var _sh = 0, _ss = 0, _sl = 0, _sa = 1;
+var _sh = .53, _ss = 1, _sl = .5, _sa = 1;
 const guiprog = {
     name: 'main',
     fields:[
     {
-        animate: false,
+        animate: true,
         onChange : (v)=>{ 
         	if(v) lineview.start(); 
         	else lineview.stop();
@@ -98,5 +98,6 @@ lineview.canvasStyle({
     // height: '50vw'
 });
 lineview.lineWidth(_lw);
-lineview.frame();
+lineview.setStroke(_sh, _ss, _sl, _sa);
+lineview.start();
 lineview.initGui(new dat.GUI(), guiprog);

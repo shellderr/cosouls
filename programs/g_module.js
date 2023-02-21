@@ -9,15 +9,20 @@ var obj, obj2, rot, rot2, proj, translate, view, colors, model, gmodels, scene;
 var p_i = 0;
 var viewx = 0, viewy = 0;
 var translatex = 0, translatey = 0, translatez = 0;
-var rotx = 0, roty = 0, rotz = 0, rr = PI;
+var rotx = -.18;
+var roty = .31;
+var rotz = .22;
+var rr = PI;
+var scale = 1.3;
+var idx = 0;
 
 function setup(_ctx, _w, _h){
     ctx = _ctx;  ww = _w; wh = _h;
     ctx.lineWidth = 2;
-    obj = load(polyhedra, 0)
-    rot = g.create_rot(0,0,0);
+    obj = load(polyhedra, idx)
+    rot = g.create_rot(rotx*rr, roty*rr, rotz*rr);
     translate = [[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,1]];
-    proj = g.create_proj(.7,.5,.3);
+    proj = g.create_proj(scale,.5,.3);
     view = g.lookAt([viewx*1, viewy*1, -1.], [0,0, .1], .0);
     model = g.create_model(0, obj.v, obj.i, rot, translate, view);
     scene = g.create_canvas_scene(ctx, ww, wh, model, null, proj);
@@ -52,18 +57,18 @@ const gui = {
     updateFame: true,
     fields:[
         {
-            idx: 0,
+            idx: idx,
             min: 0,
             max: Object.values(polyhedra).length-1,
             step: 1,
             onChange: (v)=>{
                 obj = load(polyhedra, v);
-                model = g.create_model(0, obj.v, obj.i, rot, translate, view);
+                model = g.create_model(idx, obj.v, obj.i, rot, translate, view);
                 scene.models[0] = model;
             }
         },
         {
-            scale: 1,
+            scale: scale,
             min: .1,
             max: 1.9,
             step: .1,
@@ -72,7 +77,7 @@ const gui = {
             }
         },
         {
-            rot_x: 0,
+            rot_x: rotx,
             min: -1,
             max: 1,
             step: .01,
@@ -82,7 +87,7 @@ const gui = {
             }
         },
         {
-            rot_y: 0,
+            rot_y: roty,
             min: -1,
             max: 1,
             step: .01,
@@ -92,7 +97,7 @@ const gui = {
             }
         },
         {
-            rot_z: 0,
+            rot_z: rotz,
             min: -1,
             max: 1,
             step: .01,
@@ -173,7 +178,7 @@ const prog = {
     loop: loop,
     unloop: unloop,
     gui: gui,
-    on: false
+    // on: false
 };
 
 export default prog;
