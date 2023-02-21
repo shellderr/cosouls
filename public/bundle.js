@@ -741,7 +741,7 @@
    	return min$1((2**(3.46*x)-1)/10,1);
    }
 
-   const gui$2 = {
+   const gui$3 = {
        name: 'l-system',
        open: true,
        switch: true,
@@ -868,7 +868,7 @@
        draw: draw$1,
        loop: loop$1,
        unloop: unloop$1,
-       gui: gui$2,
+       gui: gui$3,
        // on: false
    };
 
@@ -2571,7 +2571,7 @@ f 12//27 13//27 23//27 21//27 22//27
 
    }
 
-   const gui$1 = {
+   const gui$2 = {
        name: 'geom',
        open: true,
        switch: true,
@@ -2678,7 +2678,7 @@ f 12//27 13//27 23//27 21//27 22//27
        draw: draw,
        loop: loop,
        unloop: unloop,
-       gui: gui$1,
+       gui: gui$2,
        // on: false
    };
 
@@ -3065,7 +3065,7 @@ f 12//27 13//27 23//27 21//27 22//27
 
 `;
 
-   const gui = {
+   const gui$1 = {
        name: 'bkgd',
        open: true,
        switch: true,
@@ -3113,7 +3113,7 @@ f 12//27 13//27 23//27 21//27 22//27
         },
         // rendercb : rendercb,
          // setupcb : setupcb,
-         gui: gui,
+         gui: gui$1,
          on: true
         // clearcolor: [0.2, 0.8, 0.0, 1],
    };
@@ -3127,6 +3127,8 @@ f 12//27 13//27 23//27 21//27 22//27
     #define glf gl_FragCoord
 	#define PI 3.14159265
 	#define _b 1.6
+	uniform float aa;
+	uniform float bb;
 
 	vec2 b(float t, vec2 v){
 	   return abs(fract(t*v)-.5)*2.;
@@ -3136,6 +3138,9 @@ f 12//27 13//27 23//27 21//27 22//27
  		return ((sin(n)+1.)*(sin(n2)*(sin(n3))+1.)+log(((sin(PI+n)+1.)*(sin(PI+n2)+1.))+1.))*amp; 
 	}
 
+	vec3 cc(float a, float b){
+		return sin(a+vec3(.2, .6, .9)*b)*.5+.5;
+	}
 
 	void main(){
 	    vec2 uv = glf.xy/u_resolution.xy;
@@ -3164,15 +3169,43 @@ f 12//27 13//27 23//27 21//27 22//27
 	    
 	    float v = (f2-f)/d;
 	    // vec3 c = (1.-vec3(v*v))*vec3(0.,0.3,1.);
-	    vec3 c = (1.-vec3(v))*vec3(0.,0.3,1.);
+	    vec3 c = (1.-vec3(v))*cc(aa, bb);
 	    float alpha = smoothstep(clamp(v*.7,-2.,0.), 1., -.05);
 	    fragColor = vec4(c, alpha);
 	}
 
 `;
 
+   const gui = {
+       name: 'wave',
+       open: true,
+       switch: true,
+       updateFame: true,
+       fields:[
+           {
+               hue: 3.1,
+               min: 0.,
+               max: 8.,
+               step: 0.01,
+               onChange : (v)=>{prog.uniforms.aa = v;}
+           },
+           {
+               sep: 4.,
+               min: 0.,
+               max: 8.,
+               step: 0.01,
+               onChange : (v)=>{prog.uniforms.bb = v;}
+           }
+       ]
+   };
+
    const prog = {
-   	fs: fs
+   	fs: fs,
+   	gui: gui,
+   	uniforms: {
+   		aa: 3.1,
+   		bb: 4
+   	}
    };
 
    const wpgm = prog$1;
@@ -3193,6 +3226,47 @@ f 12//27 13//27 23//27 21//27 22//27
    var _lw = .5;
    var _a = 0;
    var _sh = .24, _ss = .7, _sl = .5, _sa = 1;
+   const guiprog = {
+       name: 'line',
+       open: false,
+           fields: [
+                      {
+                       animate: true,
+                       onChange : (v)=>{ 
+                           if(v) {lineview$1.start(); glview.start();}
+                           else {lineview$1.stop(); glview.stop();}
+                       }
+                   },
+                   {
+                       strokewidth: _lw, min: .1, max: 3, step: .1,
+                       onChange: (v)=>{ lineview$1.lineWidth(v); lineview$1.frame(); }
+                   },
+                   {
+                       h: _sh, min: 0, max: 1, step: .01,
+                       onChange: (v)=>{
+                           _sh = v;
+                           lineview$1.setStroke(_sh, _ss, _sl, _sa);
+                           lineview$1.frame();
+                       }
+                   },
+                   {
+                       s: _ss, min: 0, max: 1, step: .01,
+                       onChange: (v)=>{
+                           _ss = v;
+                           lineview$1.setStroke(_sh, _ss, _sl, _sa);
+                           lineview$1.frame();
+                       }
+                   },
+                   {
+                       l: _sl, min: 0, max: 1, step: .01,
+                       onChange: (v)=>{
+                           _sl = v;
+                           lineview$1.setStroke(_sh, _ss, _sl, _sa);
+                           lineview$1.frame();
+                       }
+                   }
+               ]
+   };
    lineview$1.canvasStyle({
        border: '1px solid black', 
        backgroundColor: `rgba(${_v},${_v},${_v},${_a})`,
@@ -3202,6 +3276,6 @@ f 12//27 13//27 23//27 21//27 22//27
    lineview$1.lineWidth(_lw);
    lineview$1.setStroke(_sh, _ss, _sl, _sa);
    lineview$1.start();
-   lineview$1.initGui(_gui);
+   lineview$1.initGui(_gui, guiprog);
 
 })();
