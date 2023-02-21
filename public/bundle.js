@@ -1,5 +1,5 @@
 (function () {
-   'use strict'; //
+   'use strict';
 
    class Lineview{
 
@@ -50,6 +50,9 @@
            if(typeof h == 'string')
                this.ctx.strokeStyle = h;
            else this.ctx.strokeStyle = hlsaStr(h, s, l, a);
+       }
+       lineWidth(w){
+           this.ctx.lineWidth = w; 
        }
 
        initGui(gui, mainObj){
@@ -783,18 +786,19 @@
    var ctx$1, ww$1, wh$1;
 
    var model$1;
-   var lev = 1;
-   var rule =  0;
+   var _lev = .5;
+   var lev =  ease(_lev);
+   var rule =  1;
    var n_i = 0; //use default n
    var rot_n = 4;
    var theta = 0;
    var draw_mod = repeat_rot; //null
    var recenter = false;
-   var seed = 22; //0=random
-   var mirrorx = false;
+   var seed = 0;//22; //0=random
+   var mirrorx = true;
    var mirrory = false;
-   var dbl = .4;
-   var amp = 1;
+   var dbl = 0;//.4;
+   var amp = .7;
    var yofs = 0;
 
    const l_rot = create_rot$1(-.04,.05,-.03);
@@ -928,7 +932,7 @@
    	        }
    	    },
    	    {
-   	        level: 1,
+   	        level: _lev,
    	        min: .0,
    	        max: 1,
    	        step: 0.01,
@@ -939,7 +943,7 @@
    	    },
    	    {
    	        amp: amp,
-   	        min: 1,
+   	        min: .5,
    	        max: 2,
    	        step: 0.01,
    	        onChange : (v)=>{
@@ -950,7 +954,7 @@
    	    {
    	    	seed: seed,
    	    	onChange: (v)=>{
-   	    		seed = v;
+   	    		seed = v ? v : Math.random()*99+1;
    	    		model$1 = buildModel();
    	    		prog$1.ctl.frame();
    	    	}
@@ -2686,15 +2690,20 @@ f 12//27 13//27 23//27 21//27 22//27
    var obj, rot, proj, translate, view, model, scene;
    var viewx = 0, viewy = 0;
    var translatex = 0, translatey = 0, translatez = 0;
-   var rotx = 0, roty = 0, rotz = 0, rr = PI;
+   var rotx = -.18;
+   var roty = .31;
+   var rotz = .22;
+   var rr = PI;
+   var scale = 1.3;
+   var idx = 0;
 
    function setup(_ctx, _w, _h){
        ctx = _ctx;  ww = _w; wh = _h;
        ctx.lineWidth = 2;
-       obj = load(polyhedra, 0);
-       rot = create_rot$1(0,0,0);
+       obj = load(polyhedra, idx);
+       rot = create_rot$1(rotx*rr, roty*rr, rotz*rr);
        translate = [[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,1]];
-       proj = create_proj(.7,.5,.3);
+       proj = create_proj(scale,.5,.3);
        view = lookAt([viewx*1, viewy*1, -1.], [0,0, .1], .0);
        model = create_model(0, obj.v, obj.i, rot, translate, view);
        scene = create_canvas_scene(ctx, ww, wh, model, null, proj);
@@ -2729,18 +2738,18 @@ f 12//27 13//27 23//27 21//27 22//27
        updateFame: true,
        fields:[
            {
-               idx: 0,
+               idx: idx,
                min: 0,
                max: Object.values(polyhedra).length-1,
                step: 1,
                onChange: (v)=>{
                    obj = load(polyhedra, v);
-                   model = create_model(0, obj.v, obj.i, rot, translate, view);
+                   model = create_model(idx, obj.v, obj.i, rot, translate, view);
                    scene.models[0] = model;
                }
            },
            {
-               scale: 1,
+               scale: scale,
                min: .1,
                max: 1.9,
                step: .1,
@@ -2749,7 +2758,7 @@ f 12//27 13//27 23//27 21//27 22//27
                }
            },
            {
-               rot_x: 0,
+               rot_x: rotx,
                min: -1,
                max: 1,
                step: .01,
@@ -2759,7 +2768,7 @@ f 12//27 13//27 23//27 21//27 22//27
                }
            },
            {
-               rot_y: 0,
+               rot_y: roty,
                min: -1,
                max: 1,
                step: .01,
@@ -2769,7 +2778,7 @@ f 12//27 13//27 23//27 21//27 22//27
                }
            },
            {
-               rot_z: 0,
+               rot_z: rotz,
                min: -1,
                max: 1,
                step: .01,
@@ -2850,20 +2859,20 @@ f 12//27 13//27 23//27 21//27 22//27
        loop: loop,
        unloop: unloop,
        gui: gui,
-       on: false
+       // on: false
    };
 
    const pgm = [prog$2, prog, prog$1];
    const lineview$1 = new Lineview(document.querySelector('#disp'), pgm, 500, 500);
-   var _v = 230;
-   var _lw = 2;
+   var _v = 0;
+   var _lw = .6;
    var _h = 0, _s = 0, _l = .9, _a = 1;
-   var _sh = 0, _ss = 0, _sl = 0, _sa = 1;
+   var _sh = .53, _ss = 1, _sl = .5, _sa = 1;
    const guiprog = {
        name: 'main',
        fields:[
        {
-           animate: false,
+           animate: true,
            onChange : (v)=>{ 
            	if(v) lineview$1.start(); 
            	else lineview$1.stop();
@@ -2871,7 +2880,7 @@ f 12//27 13//27 23//27 21//27 22//27
        },
        {
            strokewidth: _lw, min: .1, max: 3, step: .1,
-           onChange: (v)=>{ lineview$1.ctx.lineWidth = v; lineview$1.frame(); }
+           onChange: (v)=>{ lineview$1.lineWidth(v); lineview$1.frame(); }
        }
        ],
        folders:[
@@ -2946,6 +2955,9 @@ f 12//27 13//27 23//27 21//27 22//27
        // width: '50vw',
        // height: '50vw'
    });
+   lineview$1.lineWidth(_lw);
+   lineview$1.setStroke(_sh, _ss, _sl, _sa);
+   lineview$1.start();
    lineview$1.initGui(new GUI$1(), guiprog);
 
 })();
