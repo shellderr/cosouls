@@ -187,17 +187,17 @@ const gui = {
 	            prog.ctl.frame();
 	        }
 	    },
-	    // {
-	    // 	seed: seed,
-	    // 	onChange: (v)=>{
-	    // 		seed = v ? v : Math.random()*99+1;
-	    // 		model = buildModel();
-	    // 		prog.ctl.frame();
-	    // 	}
-	    // },
+	    {
+	    	seed: seed,
+	    	onChange: (v)=>{
+	    		seed = v ? v : Math.random()*99+1;
+	    		model = buildModel();
+	    		prog.ctl.frame();
+	    	}
+	    },
 	    {
     		randomize: ()=>{
-    			prog.gui.fields[4].ref.setValue(0);
+    			prog.gui.fields[3].ref.setValue(0);
     		}
 	    },
 		// {
