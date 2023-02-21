@@ -790,17 +790,17 @@
    	            prog$3.ctl.frame();
    	        }
    	    },
-   	    // {
-   	    // 	seed: seed,
-   	    // 	onChange: (v)=>{
-   	    // 		seed = v ? v : Math.random()*99+1;
-   	    // 		model = buildModel();
-   	    // 		prog.ctl.frame();
-   	    // 	}
-   	    // },
+   	    {
+   	    	seed: seed,
+   	    	onChange: (v)=>{
+   	    		seed = v ? v : Math.random()*99+1;
+   	    		model$1 = buildModel();
+   	    		prog$3.ctl.frame();
+   	    	}
+   	    },
    	    {
        		randomize: ()=>{
-       			prog$3.gui.fields[4].ref.setValue(0);
+       			prog$3.gui.fields[3].ref.setValue(0);
        		}
    	    },
    		// {
