@@ -7,6 +7,8 @@ const fs = /*glsl*/`#version 300 es
     #define glf gl_FragCoord
 	#define PI 3.14159265
 	#define _b 1.6
+	uniform float aa;
+	uniform float bb;
 
 	vec2 b(float t, vec2 v){
 	   return abs(fract(t*v)-.5)*2.;
@@ -16,6 +18,9 @@ const fs = /*glsl*/`#version 300 es
  		return ((sin(n)+1.)*(sin(n2)*(sin(n3))+1.)+log(((sin(PI+n)+1.)*(sin(PI+n2)+1.))+1.))*amp; 
 	}
 
+	vec3 cc(float a, float b){
+		return sin(a+vec3(.2, .6, .9)*b)*.5+.5;
+	}
 
 	void main(){
 	    vec2 uv = glf.xy/u_resolution.xy;
@@ -44,15 +49,43 @@ const fs = /*glsl*/`#version 300 es
 	    
 	    float v = (f2-f)/d;
 	    // vec3 c = (1.-vec3(v*v))*vec3(0.,0.3,1.);
-	    vec3 c = (1.-vec3(v))*vec3(0.,0.3,1.);
+	    vec3 c = (1.-vec3(v))*cc(aa, bb);
 	    float alpha = smoothstep(clamp(v*.7,-2.,0.), 1., -.05);
 	    fragColor = vec4(c, alpha);
 	}
 
 `;
 
+const gui = {
+    name: 'wave',
+    open: true,
+    switch: true,
+    updateFame: true,
+    fields:[
+        {
+            hue: 3.1,
+            min: 0.,
+            max: 8.,
+            step: 0.01,
+            onChange : (v)=>{prog.uniforms.aa = v;}
+        },
+        {
+            sep: 4.,
+            min: 0.,
+            max: 8.,
+            step: 0.01,
+            onChange : (v)=>{prog.uniforms.bb = v;}
+        }
+    ]
+}
+
 const prog = {
-	fs: fs
+	fs: fs,
+	gui: gui,
+	uniforms: {
+		aa: 3.1,
+		bb: 4
+	}
 };
 
 export default prog;
