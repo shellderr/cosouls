@@ -1,9 +1,9 @@
 const shader = /*glsl*/ `#version 300 es
 
     precision mediump float;
-    uniform float u_time;
-    uniform vec2 u_resolution;
-    uniform vec2 u_mouse;
+    uniform float time;
+    uniform vec2 resolution;
+    uniform vec2 mouse;
     uniform float v1;
     uniform float v2;
     uniform float v3;
@@ -15,7 +15,7 @@ const shader = /*glsl*/ `#version 300 es
 
     void main(){
 
-        vec2 uv = gl_FragCoord.xy/u_resolution.xy;
+        vec2 uv = gl_FragCoord.xy/resolution.xy;
 
         vec2 col = ff(cos(/*u_time+*/uv.xy*vec2(0.,4.*v2)));
         float x = 6.2*v1;
@@ -33,7 +33,7 @@ const gui = {
     name: 'bkgd',
     open: true,
     switch: true,
-    updateFame: true,
+    updateFrame: true,
     fields:[
         {
             hue: 0.47,
