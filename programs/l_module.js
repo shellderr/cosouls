@@ -156,17 +156,17 @@ const gui = {
     		}
 
     	},
-	    {
-	        n: n_i,
-	        min: 0,
-	        max: 6,
-	        step: 1,
-	        onChange : (v)=>{
-	            n_i = v;
-	            model = buildModel();
-	            prog.ctl.frame();
-	        }
-	    },
+	    // {
+	    //     n: n_i,
+	    //     min: 0,
+	    //     max: 6,
+	    //     step: 1,
+	    //     onChange : (v)=>{
+	    //         n_i = v;
+	    //         model = buildModel();
+	    //         prog.ctl.frame();
+	    //     }
+	    // },
 	    {
 	        level: _lev,
 	        min: .0,
@@ -197,16 +197,16 @@ const gui = {
 	    },
 	    {
     		randomize: ()=>{
-    			prog.gui.fields[4].ref.setValue(0);
+    			prog.gui.fields[3].ref.setValue(0);
     		}
 	    },
-{
-	    	repeat_rot: (draw_mod? true:false),
-	    	onChange: (v)=>{
-	    		draw_mod = v? repeat_rot:null;
-	    		prog.ctl.frame();
-	    	}
-	    },
+		// {
+	    // 	repeat_rot: (draw_mod? true:false),
+	    // 	onChange: (v)=>{
+	    // 		draw_mod = v? repeat_rot:null;
+	    // 		prog.ctl.frame();
+	    // 	}
+	    // },
 	    {
 	    	rot_n: rot_n,
 	    	min: 1,
@@ -217,46 +217,46 @@ const gui = {
 	    		prog.ctl.frame();
 	    	}
 	    },
-	    {
-	    	theta: theta,
-	    	min: 0,
-	    	max: 2*PI,
-	    	step: floor(PI*250)/1000,
-	    	onChange: (v)=>{
-	    		theta = v;
-	    		prog.ctl.frame();
-	    	}
-	    },
-	    {
-	    	recenter: recenter,
-	    	onChange: (v)=>{
-	    		recenter = v;
-	    		model = buildModel();
-	    		prog.ctl.frame();
-	    	}
-	    },
-	    {
-	    	mirrorx: mirrorx,
-	    	onChange: (v)=>{mirrorx = v; prog.ctl.frame();}
-	    },
-	    {
-	    	mirrory: mirrory,
-	    	onChange: (v)=>{mirrory = v; prog.ctl.frame();}
-	    },
-	    {
-	    	seperation: dbl,
-	    	min: 0,
-	    	max: 1,
-	    	step: .01,
-	    	onChange: (v)=>{dbl = v; prog.ctl.frame();}
-	    },
-	    {
-	    	y_offset: yofs,
-	    	min: -1,
-	    	max: 1,
-	    	step: .01,
-	    	onChange: (v)=>{yofs = v; prog.ctl.frame();}
-	    }
+	    // {
+	    // 	theta: theta,
+	    // 	min: 0,
+	    // 	max: 2*PI,
+	    // 	step: floor(PI*250)/1000,
+	    // 	onChange: (v)=>{
+	    // 		theta = v;
+	    // 		prog.ctl.frame();
+	    // 	}
+	    // },
+	    // {
+	    // 	recenter: recenter,
+	    // 	onChange: (v)=>{
+	    // 		recenter = v;
+	    // 		model = buildModel();
+	    // 		prog.ctl.frame();
+	    // 	}
+	    // },
+	    // {
+	    // 	mirrorx: mirrorx,
+	    // 	onChange: (v)=>{mirrorx = v; prog.ctl.frame();}
+	    // },
+	    // {
+	    // 	mirrory: mirrory,
+	    // 	onChange: (v)=>{mirrory = v; prog.ctl.frame();}
+	    // },
+	    // {
+	    // 	seperation: dbl,
+	    // 	min: 0,
+	    // 	max: 1,
+	    // 	step: .01,
+	    // 	onChange: (v)=>{dbl = v; prog.ctl.frame();}
+	    // },
+	    // {
+	    // 	y_offset: yofs,
+	    // 	min: -1,
+	    // 	max: 1,
+	    // 	step: .01,
+	    // 	onChange: (v)=>{yofs = v; prog.ctl.frame();}
+	    // }
     ]
 }
 
