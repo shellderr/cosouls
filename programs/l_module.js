@@ -2,10 +2,10 @@ const {cos, sin, pow, sqrt, abs, sign, min, max, floor, round, random, PI} = Mat
 
 import lsystem from './l-system.js';
 import * as g from './render.js';
-import rules from './selectrules.js';
+import rules from './seedrules.js';
 import Quaternion from './quaternion.js';
 
-var ctx, ww, wh;
+var ctx, ww, wh, params;
 
 var model;
 var _lev = .7;
@@ -19,31 +19,84 @@ var recenter = false;
 var seed = 0;
 var mirror = true;
 var amp = .7;
+var mainamp = 1;
 var yofs = 0;
 var yrot = false;
-var a_mode = 1;
 var hold = 10;
 
-var mouse = [0,0];
-var _time = 0;
 const r_mat = g.create_rot(-.04,.05,-.03);
 const idmat = [[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,1]];
 var qr, qi, qs;
 
-var _h = .14, _s = 1, _l = .5, _a = 1; 
+var _h = .2, _s = .77, _l = .72, _a = 1; 
 var stroke =  hlsaStr(_h, _s, _l, _a);
 var useStroke = true;
+var update = {id: null, level: null};
 
-function setup(_ctx, _w, _h){
-    ctx = _ctx; ww = _w; wh = _h;
-    model = buildModel();
+function setup(ctl){
+    ctx = ctl.ctx; 
+    ww = ctl.w; 
+    wh = ctl.h;
+    params = ctl.params;
+    seed = params.seed;
+    lev = params.ease_level;
+    seed = params.seed;
+    
+    if(!updateParams(ctl)) 
+    	model = buildModel();
+
     qr = new Quaternion.fromEuler(-.03, -.04, .05);
     qi = new Quaternion();
     qs = new Quaternion();
 }
 
-function draw(){
+function updateParams(ctl){
+	if(!ctl.params) return false;
+	if(update.level != ctl.params.level){
+		update.level = ctl.params.level;
+
+	}
+	if(update.id != ctl.params.id){
+		update.id = ctl.params.id;
+		seed = ctl.params.seed;
+		if(ctl.params.map_callbacks.lsys_rule){
+			rule = ctl.params.map_callbacks.lsys_rule(ctl.params);
+			model = buildModel();
+		}
+	}
+	if(ctl.params.map_callbacks.lsys_rot)
+		rot_n = ctl.params.map_callbacks.lsys_rot(ctl.params);
+
+	lev = ctl.params.ease_level;
+	let lin = ctl.params.norm_level;
+	let b = getBounds(model,lev);
+	//lev->radius scaling forumlas
+	// amp = .64*smstep(lin, .1, .66, .4)/b;
+	// amp = .7*(.4*max(1.-min(lev,.5), .5) + .6/b);
+	// amp = .8*(.5*smstep(lin, .6, .0, .4) + .5/b);
+	amp = .7*(.33*smstep(lev, .6, .0, .4) + .66*smstep(lin, .1, .66, .4)/b);
+
+	return true;
+}
+
+function smstep(x, start=0, end=1, _floor=0){
+	let a = max(min((x-start)/(end-start),1),0);
+	return (1-_floor)*(3*a**2-2*a**3)+_floor;
+}
+
+function getBounds(model, f){
+	let v = .1; // start threshold
+	let n = max(floor(model.i.length*f),1);
+	for(let i = n-1; i > 0; i--){		
+		let p = model.v[model.i[i][1]];
+		v = max(v, p[0]**2+p[1]**2);
+	}
+	return sqrt(v);
+}
+
+function draw(ctl){
 	if(useStroke) ctx.strokeStyle = stroke;
+	updateParams(ctl);
 	display(ctx, model, lev, draw_mod);
 }
 
@@ -52,22 +105,14 @@ var az = 0, azlast = 1;
 var lerp = 0;
 
 function loop(time, ctl){
-	_time += .01;
-	mouse = ctl.mouse;
 	if(useStroke) ctx.strokeStyle = stroke;
-
-	if(a_mode == 1){
-		vz = qs.rotateVector(vz);
-		az = vz[2];
-	    if((az-azlast > 0 && az > .7) || az-azlast == 0){ lerp += .04;}
-		if(lerp > hold) lerp = 0;
-		qs = qr.slerp(qi)(min(lerp,1));
-		qrot(model, qs);
-		azlast = az;
-	}
-	else if(a_mode == 2){
-		model.v = g.mat_mul_4(model.v, r_mat);
-	}
+	az = vz[2];
+    if((az-azlast > 0 && az >= .7) || az-azlast == 0){ lerp += .04;}
+	if(lerp > hold) lerp = 0;
+	vz = qs.rotateVector(vz);
+	qs = qr.slerp(qi)(min(lerp,1));
+	qrot(model, qs);
+	azlast = az;
 	display(ctx, model, lev, draw_mod);	
 }
 
@@ -117,9 +162,10 @@ function repeat_rot(a, b){
 }
 
 function line(ctx, w, h, ax, ay, bx, by){
+	let v = amp*mainamp;
     ctx.beginPath();
-    ctx.moveTo(amp*ax*w*.5 +w*.5, amp*(ay+yofs)*h*.5+h*.5);
-    ctx.lineTo(amp*bx*w*.5 +w*.5, amp*(by+yofs)*h*.5+h*.5);
+    ctx.moveTo(v*ax*w*.5 +w*.5, v*(ay+yofs)*h*.5+h*.5);
+    ctx.lineTo(v*bx*w*.5 +w*.5, v*(by+yofs)*h*.5+h*.5);
     ctx.closePath();
     ctx.stroke();
 }
@@ -162,7 +208,7 @@ function ease(x){
 
 const gui = {
     name: 'l-system',
-    open: true,
+    open: false,
     switch: true,
     updateFrame: true,
     fields:[
@@ -174,6 +220,7 @@ const gui = {
     		}
 
     	},
+    	/*
 	    {
 	        level: [_lev, 0, 1, .01],
 	        onChange : v => {lev = ease(v)}
@@ -190,27 +237,28 @@ const gui = {
 	    		prog.ctl.frame();
 	    	}
 	    },
+	    */
 	    {
     		randomize: ()=>{
     			prog.gui.fields[3].ref.setValue(0);
     		}
 	    },
-	    {
-	    	amode: [a_mode, 0, 2, 1],
-	    	onChange: v => {a_mode = v;}
+    	{
+    		amp: [mainamp, .5, 1.5, .1],
+    		onChange: v => {mainamp = v;}	
 	    },
 	    {
-	    	mode1_hold: [hold, 1, 20, .1],
+	    	animation_hold: [hold, 1, 20, .1],
 	    	onChange: v => {hold = v;}
 	    },
 	    {
 	    	yrot: false,
 	    	onChange: v => {yrot = v;}
 	    },
-	    {
-	    	rot_n: [rot_n, 1, 9, 1],
-	    	onChange: v => {rot_n = v}
-	    },
+	    // {
+	    // 	rot_n: [rot_n, 1, 9, 1],
+	    // 	onChange: v => {rot_n = v;}
+	    // },
     {
             name: 'color',
             open: false,
@@ -264,7 +312,8 @@ const prog = {
     draw: draw,
     loop: loop,
     unloop: unloop,
-    gui: gui
+    gui: gui,
+    // on: false
 };
 
 export default prog;

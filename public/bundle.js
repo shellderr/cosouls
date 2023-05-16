@@ -156,10 +156,10 @@
     uniform vec2 resolution;
     uniform vec2 mouse;
     uniform float time;
+    #define res resolution
 
     void main(){
-        // vec2 uv = (2.*gl_FragCoord.xy-resolution)/resolution;
-    	// fragColor = vec4(uv.xyx*cos(time+vec3(0,1,3))*.5+.5, 1);
+    	// fragColor = vec4(((2.*gl_FragCoord.xy-res)/res).xyx*cos(time+vec3(0,1,3))*.5+.5, 1);
         fragColor = vec4(0,0,0,1);
     }
 `;
@@ -194,7 +194,7 @@
 
 	class Glview{
 
-	    constructor(canvas, pgms, res, fps, gui, guiobj, cbobj){
+	    constructor(canvas, pgms, res, fps, gui, guiobj, cbobj, params){
 	    	this.pgms = (pgms instanceof Array)? pgms : [pgms];
 	        this.prog = this.pgms[0];
 	        this.gl = canvas.getContext("webgl2", {premultipliedAlpha: true, antialias: true});
@@ -218,8 +218,9 @@
 	        this.gl.blendFunc(this.gl.SRC_ALPHA, this.gl.ONE_MINUS_SRC_ALPHA);
 	        this.gl.viewport(0, 0, this.res[0], this.res[1]);
 
+	        this.params = params;
 	        let nf = ()=>{};
-	        this.cbobj = cbobj || {init: nf, start:nf, stop: nf, frame:nf, pgms: []};
+	        this.cbobj = cbobj || {init: nf, start:nf, stop: nf, frame:nf, pgms: [], params: []};
 	        cbobj.init(this);
 
 	        if(!this.init(this.gl, this.pgms)){this.start = this.frame = ()=>{}; return;}
@@ -256,9 +257,9 @@
 
 	    frame(time=0){
 	        if(!this.loop){
-	            this.cbobj.frame(time);
 	            this.render(time);
 	        }
+	        this.cbobj.frame(time);
 	    }
 
 	    render(time){
@@ -347,7 +348,6 @@
 	}
 
 	function initSubGui(gui, p, ctl, hide){
-	    if(p.gui.name === null){addGuiObj(gui, p.gui, ctl); return;}
 	    p._gui = gui.addFolder(p.gui.name||'');
 	    if(hide) p._gui.hide();
 	    if(p.gui.open && p.on) p._gui.open(); 
@@ -423,8 +423,10 @@
 	    }
 
 	    init(ctl){ 
+	        this.params = ctl.params;
+	        this.ctl = ctl;
 	        for(let p of this.pgms){
-	            p.setup(this.ctx, this.w, this.h);
+	            p.setup(this);
 	            p.on = p.on == undefined ? true : p.on;
 	        } 
 	    }
@@ -443,18 +445,20 @@
 
 	    loop(time){
 	        this.ctx.clearRect(0, 0, this.w, this.h);
+	        this.params = this.ctl.params;
 	        for(let p of this.pgms) if(p.on && p.loop) p.loop(time, this);
 	        if(this.running)
 	            this.loopid = requestAnimationFrame(this.loop);
 	    }
 
 	    draw(){
+	        this.params = this.ctl.params;
 	        this.ctx.clearRect(0, 0, this.w, this.h);
-	        for(let p of this.pgms) if(p.on) p.draw();
+	        for(let p of this.pgms) if(p.on) p.draw(this);
 	    }
 
 	    frame(){
-	        if(!this.running) this.draw();
+	        /*if(!this.running)*/ this.draw(this);
 	    }
 
 	    lineWidth(w){
@@ -501,9 +505,12 @@
     #define glf gl_FragCoord
 	#define PI 3.14159265
 	#define _b 1.6
-	uniform float hue;
+	// uniform float hue;
+	// uniform float sep;
+	uniform float ch;
+	uniform float cs;
+	uniform float cv;
 	uniform float alpha;
-	uniform float sep;
 
 	vec2 b(float t, vec2 v){
 	   return abs(fract(t*v)-.5)*2.;
@@ -514,8 +521,14 @@
 	}
 
 	vec3 rgb(float a){
-		return sin(a+vec3(.5,1.5,3)*sep)*.5+.5;
+		return sin(a+vec3(.5,1.5,3))*.5+.5;
 	}
+
+    vec3 hsv2rgb(vec3 c){
+        vec4 K = vec4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);
+        vec3 p = abs(fract(c.xxx + K.xyz) * 6.0 - K.www);
+        return c.z * mix(K.xxx, clamp(p - K.xxx, 0.0, 1.0), c.y);
+    }
 
 	void main(){
 	    vec2 uv = glf.xy/resolution.xy;
@@ -541,7 +554,8 @@
 	    f2 += ff(n+d, n2+d, n3+d, amp);
 	    
 	    float v = (f2-f)/d;
-	    vec3 c = (1.-vec3(v))*rgb(hue);
+	    // vec3 c = (1.-vec3(v))*rgb(hue);
+	    vec3 c = hsv2rgb(vec3(ch, cs, cv));
 	    float fade = min(.2, max(alpha, .01))*5.;
 	    float alpha = smoothstep(clamp(v*fade, -2., 0.), .6, alpha*.6);
 	    fragColor = vec4(c, alpha);
@@ -551,20 +565,32 @@
 
 	const gui$3 = {
 	    name: 'wave',
-	    // open: true,
+	    open: false,
 	    switch: true,
 	    updateFrame: true,
 	    fields:[
+	    	{
+	    		h: [.75,0,1,.01],
+	    		onChange: v=> {prog$3.uniforms.ch = v;}
+	    	},
+	    	{
+	    		s: [1,0,1,.01],
+	    		onChange: v=> {prog$3.uniforms.cs = v;}
+	    	},
+	    	{
+	    		v: [.6,0,1,.01],
+	    		onChange: v=> {prog$3.uniforms.cv = v;}
+	    	},
+	        // {
+	        //     hue: [3.77, 0, 5, .01],
+	        //     onChange : (v)=>{prog.uniforms.hue = v;}
+	        // },
+	        // {
+	        //     sep: [1, 0, 2, .01],
+	        //     onChange : (v)=>{prog.uniforms.sep = v;}
+	        // },
 	        {
-	            hue: [3.77, 0, 5, .01],
-	            onChange : (v)=>{prog$3.uniforms.hue = v;}
-	        },
-	        {
-	            sep: [1, 0, 2, .01],
-	            onChange : (v)=>{prog$3.uniforms.sep = v;}
-	        },
-	        {
-	            alpha: [.08, 0, 1, .01],
+	            alpha: [.04, 0, .5, .01],
 	            onChange : (v)=>{prog$3.uniforms.alpha = v;}
 	        }
 	    ]
@@ -574,9 +600,12 @@
 		fs: fs$1,
 		gui: gui$3,
 		uniforms: {
-			hue: 3.77,
-			alpha: .08,
-			sep: 1 
+			// hue: 3.77,
+			// sep: 1 
+			ch: .75,
+			cs: 1.,
+			cv: .6,
+			alpha: .04,
 		}
 	};
 
@@ -591,6 +620,11 @@
     uniform float amp;
     uniform float dir;
     uniform bool w2;
+    uniform float s_hue;
+    uniform float d_hue;
+    uniform float alev;
+    uniform float cv;
+    uniform float cs;
 
     vec2 ball(float t){
         return vec2(sin(t*1.2)*cos(5.+t*.82), cos(6.+t*.9));
@@ -635,10 +669,18 @@
         return normalize(cross(vec3(1, 0, p.x), vec3(0, 1, p.y)));
     }
 
+    vec3 hsv2rgb(vec3 c){
+        vec4 K = vec4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);
+        vec3 p = abs(fract(c.xxx + K.xyz) * 6.0 - K.www);
+        return c.z * mix(K.xxx, clamp(p - K.xxx, 0.0, 1.0), c.y);
+    }
+
     vec3 light(vec2 uv, float t, float a){
-    	vec3 c1 = vec3(0,.6,1);
-    	vec3 c2 = vec3(0,.0,1);
-    	vec3 c3 = vec3(.6,.0,1);
+    	// vec3 c1 = vec3(0,.6,1)*1.;
+        vec3 c1 = hsv2rgb(vec3(s_hue,.8*cs,cv));
+        vec3 c3 = hsv2rgb(vec3(d_hue,.9*cs,cv));
+        vec3 c2 = hsv2rgb(vec3(d_hue,.9*cs,cv));
+    	// vec3 c3 = vec3(.6,.0,1)*0.;
         vec3 l1 = normalize(vec3(vmouse*2.-1., 1));
         vec3 l2 = normalize(vec3(-1., -1.5, 2.5));
         vec3 w = w2 ? wave2(uv, uv, t, a) : wave(uv, uv, t, a);
@@ -670,7 +712,7 @@
 
 	const gui$2 = {
 	    name: 'waveb',
-	    // open: true,
+	    open: false,
 	    switch: true,
 	    updateFrame: true,
 	    fields: [
@@ -681,6 +723,22 @@
 	        {
 	            lighty: [.5,0,1,.1],
 	            onChange: v => {prog$2.uniforms.vmouse[1] = v;}
+	        },
+	        {
+	            spec_hue: [.77, 0, 1, .01],
+	            onChange: v => {prog$2.uniforms.s_hue = v;}
+	        },
+	        {
+	            dif_hue: [.66, 0, 1, .01],
+	            onChange: v => {prog$2.uniforms.d_hue = v;}
+	        },
+	        {
+	            lev: [.75, 0, 1, .01],
+	            onChange: v => {prog$2.uniforms.cv = v;}
+	        },
+	        {
+	            sat: [.96, 0, 1, .01],
+	            onChange: v => {prog$2.uniforms.cs = v;}
 	        },
 	        {
 	            scale: [3.7, 1, 10, .01],
@@ -713,7 +771,11 @@
 	        w2 : true,
 	        tscale: .18,
 	        alpha: .36,
-	        dir: -1
+	        dir: -1,
+	        s_hue: .77,
+	        d_hue: .66,
+	        cv: .75,
+	        cs: .96
 	    },
 	    gui: gui$2
 	};
@@ -2506,7 +2568,7 @@ f 12//27 13//27 23//27 21//27 22//27
 
 	const {cos: cos$2, sin: sin$2, sqrt: sqrt$2, min: min$1, max: max$1, floor: floor$2, round: round$1, random: random$1, PI: PI$2} = Math;
 
-	var ctx$1, ww$1, wh$1;
+	var ctx$1, ww$1, wh$1, params$1;
 	var obj, rot, proj, translate, view, model$1, scene;
 	var viewx = 0, viewy = 0;
 	var translatez = -.55;
@@ -2516,34 +2578,76 @@ f 12//27 13//27 23//27 21//27 22//27
 	var rr = PI$2;
 	var scale = 1.4;
 	var idx = 8;
-	const atable = [2.5,3,3,2.5,1.2,1,3,2,1.5,2,1.1,1.1,1.1,1.1];
 
-	var _h$1 = .58, _s$1 = 1, _l$1 = .5, _a$1 = 1; 
+	const atable = [2.5,3,3,2.5,1.2,1,3,2,1.5,2,1.1,1.1,1.1,1.1];
+	const scenevals = [
+	{scale: 1.3, z: -.9, clip: 2.5}, // 0
+	{scale: 1.2, z: -.78, clip: .5}, // 1
+	{scale: 1.8, z: -.42, clip: -1.2}, // 2
+	{scale: 1.4, z: -.69, clip: -.12}, // 3
+	{scale: 1.5, z: -.667, clip: -.58}, // 4
+	{scale: 1.3, z: -.57, clip: 5}, // 5
+	{scale: 1.2, z: -.59, clip: -.35}, // 6
+	// {scale: 1.4, z: -.4, clip: -1.12}, // 7
+	{scale: 1.4, z: -.34, clip: -1.12}, // 7
+	{scale: 1.4, z: -.68, clip: 1}, // 8
+	{scale: 1.1, z: -.8, clip: .73}, // 9
+	{scale: 1., z: -.66, clip: .5}, // 10
+	{scale: 1.1, z: -.72, clip: -.12}, // 11
+	{scale: 1, z: -.9, clip: .8}, // 12
+	{scale: 1.1, z: -.69, clip: -.2}, // 13
+	{scale: .9, z: -.97, clip: 2.5}];// 14
+
+	var _h$1 = .7, _s$1 = .8, _l$1 = .56, _a$1 = 1; 
 	var stroke$2 =  hlsaStr$1(_h$1, _s$1, _l$1, _a$1);
 	var useStroke$1 = true;
+	var update$1 = {id: null, level: null};
 
-	function setup$1(_ctx, _w, _h){
-	    ctx$1 = _ctx;  ww$1 = _w; wh$1 = _h;
-	    obj = load(polyhedra, idx);
-	    rot = create_rot$1(rotx*rr, roty*rr, rotz*rr);
-	    translate = [[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,1]];
-	    translate[3][2] = translatez;
-	    proj = create_proj(scale,.5,.3);
-	    view = lookAt([viewx*1, viewy*1, -1.], [0,0, .1], .0);
-	    model$1 = create_model(0, obj.v, obj.i, rot, translate, view);
-	    scene = create_canvas_scene(ctx$1, ww$1, wh$1, model$1, null, proj);
-	    scene.z_clip = 5;
+	function setup$1(ctl){
+	    ctx$1 = ctl.ctx; 
+	    ww$1 = ctl.w; 
+	    wh$1 = ctl.h;
+	    params$1 = ctl.params;
+	    setModel(params$1);
 	}
 
-	function load(set, idx, amp=.5){
-	    let _obj = loadObj(Object.values(set)[idx], 1/atable[idx]);
+	function load(set, idx, amp=1){
+	    let _obj = loadObj(Object.values(set)[idx], amp/atable[idx]);
 	    let o = {v: _obj.vertices.v, i: _obj.indices.v};
 	    o.i = edgeList(o.i);
 	    return o;
 	}
 
+	function setModel(params){ 
+	    if(update$1.id != params.id){
+	        update$1.id = params.id;
+	        if(params && params.map_callbacks.geom_poly)
+	            idx = params.map_callbacks.geom_poly(params);
+	        obj = load(polyhedra, idx);
+	        let s = scenevals[idx];
+	        rot = create_rot$1(rotx*rr, roty*rr, rotz*rr);
+	        translate = [[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,1]];
+	        translate[3][2] = s.z;
+	        proj = create_proj(s.scale,.5,.3);
+	        view = lookAt([viewx*1, viewy*1, -1.], [0,0, .1], .0);
+	        model$1 = create_model(0, obj.v, obj.i, rot, translate, view);
+	        scene = create_canvas_scene(ctx$1, ww$1, wh$1, model$1, null, proj);
+	        scene.z_clip = s.clip;
+	        console.log('poly', idx);
+	    }
+	}
+
+	function setScene(idx){
+	    let s = scenevals[idx];
+	    if(!s) return;
+	    scene.p_mat = create_proj(s.scale,.5,.3);
+	    translate[3][2] = s.z;
+	    scene.z_clip = s.clip;
+	}
+
 	function draw$1(){
 	    if(useStroke$1) ctx$1.strokeStyle = stroke$2;
+	    setModel(params$1);
 	    canvasrender(scene);
 	}
 
@@ -2561,9 +2665,9 @@ f 12//27 13//27 23//27 21//27 22//27
 
 	const gui$1 = {
 	    name: 'geom',
-	    open: true,
+	    open: false,
 	    switch: true,
-	    updateFame: true,
+	    updateFrame: true,
 	    fields:[
 	        {
 	            idx: idx,
@@ -2574,6 +2678,7 @@ f 12//27 13//27 23//27 21//27 22//27
 	                obj = load(polyhedra, v);
 	                model$1 = create_model(idx, obj.v, obj.i, rot, translate, view);
 	                scene.models[0] = model$1;
+	                setScene(v);
 	            }
 	        },
 	        {
@@ -2618,7 +2723,7 @@ f 12//27 13//27 23//27 21//27 22//27
 	        {
 	            translate_z: translatez,
 	            min:-1,
-	            max:1,
+	            max:.1,
 	            step:.01,
 	            onChange: (v)=>{
 	                translatez = v;
@@ -2757,7 +2862,7 @@ f 12//27 13//27 23//27 21//27 22//27
 		}
 	};
 
-	function mulberry32(a) {
+	function mulberry32$1(a) {
 	    return function() {
 	      var t = a += 0x6D2B79F5;
 	      t = Math.imul(t ^ t >>> 15, t | 1);
@@ -2768,7 +2873,7 @@ f 12//27 13//27 23//27 21//27 22//27
 
 	function sequence(rules, n, _rand){
 		let str = rules.axiom;
-		let rand = _rand ? mulberry32(_rand) : Math.random;
+		let rand = _rand ? mulberry32$1(_rand) : Math.random;
 		for(let i = 0; i < n; i++){
 			let s = '';
 			for(let c of str){
@@ -2879,147 +2984,147 @@ f 12//27 13//27 23//27 21//27 22//27
 	}
 
 	const arr = [
-	{
-		axiom: 'F',
-		theta: 60,
-		delta: 4,
-		n: 5,
-		F: ['FF-[XY]+[XY]', 'FYF-[XY]+[--XY]'],
-		X: '+F+--X+Y',
-		Y: '-FX'
+	{ //0
+	    axiom: 'F',
+	    theta: 60,
+	    delta: 4,
+	    n: 5,
+	    F: ['FF-[XY]+[XY]', 'FYF-[XY]+[--XY]'],
+	    X: '+F+--X+Y',
+	    Y: '-FX'
 	},
-	{
-		theta: 45,
-		delta: 10,
-		n: 3,
-		axiom: '+WF--YF--ZF',
-		W: 'YF++ZF----XF[-YF----WF]++',
-		X: '+YF--ZF[---WF--XF]+',
-		Y: ['-WF++XF[+++YF++ZF]-', '+XF[YFZF]-', 'XX-F'],
-		Z: '--YF++++WF[+ZF++++XF]--XF',
-		F: 'FF'
+	{ //1
+	    theta: 45,
+	    delta: 10,
+	    n: 3,
+	    axiom: '+WF--YF--ZF',
+	    W: 'YF++ZF----XF[-YF----WF]++',
+	    X: '+YF--ZF[---WF--XF]+',
+	    Y: ['-WF++XF[+++YF++ZF]-', '+XF[YFZF]-', 'XX-F'],
+	    Z: '--YF++++WF[+ZF++++XF]--XF',
+	    F: 'FF'
 	},
-	{
-		theta: 36,
-		delta: 10,
-		n: 2,
+	{ //2
+	    theta: 36,
+	    delta: 10,
+	    n: 2,
 	    axiom:'+WF--XF---YF--ZF',
 	    F: 'FF',
-		W: ['YF++ZF----XF[+++]++', 'YF++ZF----XF[-YF----WF]++'],
-		X: '+YF--ZF[---WF--XF]+',
-		Y: ['-WF++XF[+++YF++ZF]-', '-XY[F++F]'],
-		Z: '--YF++++WF[+ZF++++XF]--XF'
+	    W: ['YF++ZF----XF[+++]++', 'YF++ZF----XF[-YF----WF]++'],
+	    X: '+YF--ZF[---WF--XF]+',
+	    Y: ['-WF++XF[+++YF++ZF]-', '-XY[F++F]'],
+	    Z: '--YF++++WF[+ZF++++XF]--XF'
 	},
-	{
-		theta: 45,
-		delta: 6,
-		n: 3,
-		axiom: 'F',
-		// F: 'F[+FF]F[-FF]F' 
-		F: ['F[+FF]F[-FF]F', 'FF[+FF]F[-FFF]', 'F[+FFF]Z[-FF]F', 'F[+FFF]Z[-FF]F'],
-		Z: ['', '-', 'F[ZF]-']
+	{ //3
+	    theta: 45,
+	    delta: 6,
+	    n: 3,
+	    axiom: 'F',
+	    // F: 'F[+FF]F[-FF]F' 
+	    F: ['F[+FF]F[-FF]F', 'FF[+FF]F[-FFF]', 'F[+FFF]Z[-FF]F', 'F[+FFF]Z[-FF]F'],
+	    Z: ['', '-', 'F[ZF]-']
 	},
-	{
-		theta: 36,
-		delta: 20,
-		n: 3,
+	{ //4
+	    theta: 36,
+	    delta: 20,
+	    n: 3,
 	    axiom:'+WF--XF---YF--ZF',
 	    F: '',
-		W: 'YF++ZF----XF[-YF----WF]++',
-		X: '+YF--ZF[---WF--XF]+',
-		Y: '-WF++XF[+++YF++ZF]-',
-		Z: '--YF++++WF[+ZF++++XF]--XF'
+	    W: ['YF++ZF----XF[-YF----WF]++', 'YFXF[-YF----WF]++'],
+	    X: ['+YF--ZF[---WF--XF]+', ],
+	    Y: ['-WF++XF[+++YF++ZF]-', '--W++F[YF+++ZF]-'],
+	    Z: ['--YF++++WF[+ZF++++XF]--XF', '-YF++++F-XF']
 	},
-	{
-		theta: 16,
-		delta: 12,
-		n: 3,
-		axiom: 'FXFXFX',
-		F: '',
-		X: ['[FX-FY][-FX-FY-FX][ZZ]-FY-FX+FY+FX', '[FX-FY]-FF+FY+FX'],
-		Y: 'FY',
-		Z: '-FX-FY-FX'
+	{ //5
+	    theta: 20,
+	    delta: 12,
+	    n: 3,
+	    axiom: 'FXFXFX',
+	    F: '',
+	    X: ['[FX-FY][-FX-FY-FX][ZZ]-FY-FX+FY+FX', '[FX-FY]-FF+FY+FX'],
+	    Y: 'FY',
+	    Z: '-FX-FY-FX'
 	},
-	{
-		axiom: 'X',
-		theta: 24,
-		delta: 5,
-		n: 4,
-		F:'FF',
-		X: 'F-[[X]+X]+F[+FX]-X'
+	{ //6
+	    axiom: 'X',
+	    theta: 24,
+	    delta: 5,
+	    n: 4,
+	    F:['FF', 'FF', 'XF', '+FXF'],
+	    X: ['F-[[X]+X]+F[+FX]-X', 'F-[[-X]+X]+[F[+FX]-]FXX', 'F-[-F[-X]F+X]+F[+FX]-X']
 	},
-	{
-		axiom: 'F',
-		theta: 60,
-		delta: 5,
-		n: 5,
-		F: 'FF-[XY]+[XY]',
-		X: '+FY',
-		Y: '-FX'
+	{   // 7
+	    axiom: 'F',
+	    theta: 60,
+	    delta: 5,
+	    n: 5,
+	    F: ['FF-[XY]+[XY]', 'FF-[YY]+[Y-XY]'],
+	    X: ['+FY', 'F+XY', '-F+FXY'],
+	    Y: ['-X', '-XF-X']
+	},/*
+	{   //8
+	    axiom: 'F',
+	    theta: 30,
+	    delta: 5,
+	    n: 5,
+	    F: ['FF-[FY]+[XY]', 'FF-[FF+Y]+[XY]', 'F-[FY]+[FX+XY]'],
+	    X: ['+FX--Y', 'X[F--x]-Y', 'X[F-x]-Y--XF'],
+	    Y: ['XX','-XYX', '-Y-FX']
+	},*/
+	{   //8 ...
+	    axiom: 'F',
+	    theta: 30,
+	    delta: 5,
+	    n: 5,
+	    F: ['FF-[FY]+[XY]', 'FF-[FF+Y]+[XY]', 'F-[FY]+[F+XY]'],
+	    X: ['+FX--Y', 'X-Y', 'X[F]-Y--F'],
+	    Y: ['XX','-XYX', '-Y-FX']
 	},
-	{
-		axiom: 'F',
-		theta: 30,
-		delta: 5,
-		n: 5,
-		F: 'FF-[FY]+[XY]',
-		X: '+F--Y',
-		Y: 'Y-Y'
+	{ //9   
+	    axiom: 'X+F',
+	    theta: 45,
+	    delta: 6,
+	    n: 4,
+	    F: ['+X-F', '-XX+F', '+XF+'],
+	    X:['-FFXF[X+FF-F+]', '-FF[X+XX]-F', 'FXF[X+[F-]XF+]']
 	},
-	{	
-		axiom: 'X++F',
-		theta: 45,
-		delta: 7,
-		n: 3,
-		F: ['+X-F', '-XX+F', '+XF+'],
-		X:['-FFXF[X+FF-F+]', '-FF[X+XX]-F']
+	{ //10  
+	    axiom: 'F+F+F+F',
+	    theta: 90,
+	    delta: 8,
+	    n: 2,
+	    F:['F+F-F-FF+F+F-F', 'F--FF-F-FF+F+F-F', 'F--FF-F-F+F+F+F-F', 'F+F-FF+F-FF+F+F']
 	},
-	{	
-		axiom: 'F+F+F+F',
-		theta: 90,
-		delta: 8,
-		n: 2,
-		F:'F+F-F-FF+F+F-F'
+	{ //11
+	    axiom: 'F',
+	    theta: 28,
+	    delta: 9,
+	    n: 3,
+	    F: ['[FF+[+F-F-F]X-[-F+F+F]', '[FF+[+F-FF]-[FX+F+F]', 'F[F[FF]+F]'],
+	    X: ['X[F-X]', '-X+XF', '[F++]-XF', '+XXF']
 	},
-	{
-		axiom: 'F',
-		theta: 28,
-		delta: 9,
-		n: 3,
-		F: 'FF+[+F-F-F]-[-F+F+F]'
-	},
-	{
-		theta: 60,
-		delta: 10,
-		n: 3,
+	{ //12
+	    theta: 60,
+	    delta: 10,
+	    n: 3,
 	    axiom:'+WF--XF---YF--ZF',
 	    F: 'FF',
-		W: ['YF++ZF----XF[+++]++', 'YF++ZF----XF[-YF----WF]++'],
-		X: '+YF--ZF[---WF--XF]+',
-		Y: ['-WF++XF[+++YF++ZF]-', '-XY[F++F]'],
-		Z: '--YF++++WF[+ZF++++XF]--XF'
-	}, /*
-	{
-		theta: 45,
-		delta: 18,
-		n: 3,
-	    axiom:'[N]FF++[N]-P',
-		M: ['O[-OF----MF]++', 'OFF+'],
-		N: '+OF--PF[---MF--NF]+',
-		O: ['-MF++NF[+++OF++PF]-', '-MF++NF[+++OF++PF]-'],
-		P: ['--OF++++MF[+PFF++++NF]--NF', '--OF++++MNF[+PF++++NF]--NF'],
-	}, */
-	{
-		theta: 45,
-		delta: 14,
-		n: 3,
-	    axiom:'[N]++[N]++[N]++[N]++[N]',
-		M: ['OF++PF----NF[-OF----MF]++', 'OF++PF-NF[-OF----MF]++'],
-		N: '+OF--PF[---MF--NF]+',
-		O: ['-MF++NF[+++OF++PF]-', 'M+NF-'],
-		P: '--OF++++MF[+PF++++NF]--NF',
-		F: ['','FF','M']
+	    W: ['YF++ZF----XF[+++]++', 'YF++ZF----XF[-YF----WF]++'],
+	    X: '+YF--ZF[---WF--XF]+',
+	    Y: ['-WF++XF[+++YF++ZF]-', '-XY[F++F]'],
+	    Z: '--YF++++WF[+ZF++++XF]--XF'
 	},
+	{ //13
+	    theta: 45,
+	    delta: 14,
+	    n: 3,
+	    axiom:'[N]++[N]++[N]++[N]++[N]',
+	    M: ['OF++PF----NF[-OF----MF]++', 'OF++PF-NF[-OF----MF]++'],
+	    N: '+OF--PF[---MF--NF]+',
+	    O: ['-MF++NF[+++OF++PF]-', 'M+NF-'],
+	    P: '--OF++++MF[+PF++++NF]--NF',
+	    F: ['','FF','M']
+	}
 	];
 
 	/**
@@ -4192,11 +4297,11 @@ f 12//27 13//27 23//27 21//27 22//27
 
 	const {cos, sin, pow, sqrt, abs, sign, min, max, floor, round, random, PI} = Math;
 
-	var ctx, ww, wh;
+	var ctx, ww, wh, params;
 
 	var model;
 	var _lev = .7;
-	var lev = ease(_lev);
+	var lev = ease$1(_lev);
 	var rule =  0;
 	var n_i = 0; 
 	var rot_n = 6;
@@ -4206,27 +4311,83 @@ f 12//27 13//27 23//27 21//27 22//27
 	var seed = 0;
 	var mirror = true;
 	var amp = .7;
+	var mainamp = 1;
 	var yofs = 0;
 	var yrot = false;
-	var a_mode = 1;
 	var hold = 10;
-	const r_mat = create_rot$1(-.04,.05,-.03);
+
+	create_rot$1(-.04,.05,-.03);
 	var qr, qi, qs;
 
-	var _h = .14, _s = 1, _l = .5, _a = 1; 
+	var _h = .2, _s = .77, _l = .72, _a = 1; 
 	var stroke$1 =  hlsaStr(_h, _s, _l, _a);
 	var useStroke = true;
+	var update = {id: null, level: null};
 
-	function setup(_ctx, _w, _h){
-	    ctx = _ctx; ww = _w; wh = _h;
-	    model = buildModel();
+	function setup(ctl){
+	    ctx = ctl.ctx; 
+	    ww = ctl.w; 
+	    wh = ctl.h;
+	    params = ctl.params;
+	    seed = params.seed;
+	    lev = params.ease_level;
+	    seed = params.seed;
+	    
+	    if(!updateParams(ctl)) 
+	    	model = buildModel();
+
 	    qr = new Quaternion.fromEuler(-.03, -.04, .05);
 	    qi = new Quaternion();
 	    qs = new Quaternion();
 	}
 
-	function draw(){
+	function updateParams(ctl){
+		if(!ctl.params) return false;
+		if(update.level != ctl.params.level){
+			update.level = ctl.params.level;
+
+		}
+		if(update.id != ctl.params.id){
+			update.id = ctl.params.id;
+			seed = ctl.params.seed;
+			if(ctl.params.map_callbacks.lsys_rule){
+				rule = ctl.params.map_callbacks.lsys_rule(ctl.params);
+				model = buildModel();
+			}
+		}
+		if(ctl.params.map_callbacks.lsys_rot)
+			rot_n = ctl.params.map_callbacks.lsys_rot(ctl.params);
+
+		lev = ctl.params.ease_level;
+		let lin = ctl.params.norm_level;
+		let b = getBounds(model,lev);
+		//lev->radius scaling forumlas
+		// amp = .64*smstep(lin, .1, .66, .4)/b;
+		// amp = .7*(.4*max(1.-min(lev,.5), .5) + .6/b);
+		// amp = .8*(.5*smstep(lin, .6, .0, .4) + .5/b);
+		amp = .7*(.33*smstep(lev, .6, .0, .4) + .66*smstep(lin, .1, .66, .4)/b);
+
+		return true;
+	}
+
+	function smstep(x, start=0, end=1, _floor=0){
+		let a = max(min((x-start)/(end-start),1),0);
+		return (1-_floor)*(3*a**2-2*a**3)+_floor;
+	}
+
+	function getBounds(model, f){
+		let v = .1; // start threshold
+		let n = max(floor(model.i.length*f),1);
+		for(let i = n-1; i > 0; i--){		
+			let p = model.v[model.i[i][1]];
+			v = max(v, p[0]**2+p[1]**2);
+		}
+		return sqrt(v);
+	}
+
+	function draw(ctl){
 		if(useStroke) ctx.strokeStyle = stroke$1;
+		updateParams(ctl);
 		display(ctx, model, lev, draw_mod);
 	}
 
@@ -4235,21 +4396,14 @@ f 12//27 13//27 23//27 21//27 22//27
 	var lerp = 0;
 
 	function loop(time, ctl){
-		ctl.mouse;
 		if(useStroke) ctx.strokeStyle = stroke$1;
-
-		if(a_mode == 1){
-			vz = qs.rotateVector(vz);
-			az = vz[2];
-		    if((az-azlast > 0 && az > .7) || az-azlast == 0){ lerp += .04;}
-			if(lerp > hold) lerp = 0;
-			qs = qr.slerp(qi)(min(lerp,1));
-			qrot(model, qs);
-			azlast = az;
-		}
-		else if(a_mode == 2){
-			model.v = mat_mul_4(model.v, r_mat);
-		}
+		az = vz[2];
+	    if((az-azlast > 0 && az >= .7) || az-azlast == 0){ lerp += .04;}
+		if(lerp > hold) lerp = 0;
+		vz = qs.rotateVector(vz);
+		qs = qr.slerp(qi)(min(lerp,1));
+		qrot(model, qs);
+		azlast = az;
 		display(ctx, model, lev, draw_mod);	
 	}
 
@@ -4299,9 +4453,10 @@ f 12//27 13//27 23//27 21//27 22//27
 	}
 
 	function line(ctx, w, h, ax, ay, bx, by){
+		let v = amp*mainamp;
 	    ctx.beginPath();
-	    ctx.moveTo(amp*ax*w*.5 +w*.5, amp*(ay+yofs)*h*.5+h*.5);
-	    ctx.lineTo(amp*bx*w*.5 +w*.5, amp*(by+yofs)*h*.5+h*.5);
+	    ctx.moveTo(v*ax*w*.5 +w*.5, v*(ay+yofs)*h*.5+h*.5);
+	    ctx.lineTo(v*bx*w*.5 +w*.5, v*(by+yofs)*h*.5+h*.5);
 	    ctx.closePath();
 	    ctx.stroke();
 	}
@@ -4320,13 +4475,13 @@ f 12//27 13//27 23//27 21//27 22//27
 	function homv(v){
 		return [v[0], v[1], v[2], 1];
 	}
-	function ease(x){
+	function ease$1(x){
 		return min((2**(3.46*x)-1)/10,1);
 	}
 
 	const gui = {
 	    name: 'l-system',
-	    open: true,
+	    open: false,
 	    switch: true,
 	    updateFrame: true,
 	    fields:[
@@ -4338,13 +4493,14 @@ f 12//27 13//27 23//27 21//27 22//27
 	    		}
 
 	    	},
+	    	/*
 		    {
 		        level: [_lev, 0, 1, .01],
-		        onChange : v => {lev = ease(v);}
+		        onChange : v => {lev = ease(v)}
 		    },
 		    {
 		        amp: [amp, .3, 1.3, .01],
-		        onChange : v => {amp = v;}
+		        onChange : v => {amp = v}
 		    },
 		    {
 		    	seed: seed,
@@ -4354,27 +4510,28 @@ f 12//27 13//27 23//27 21//27 22//27
 		    		prog.ctl.frame();
 		    	}
 		    },
+		    */
 		    {
 	    		randomize: ()=>{
 	    			prog.gui.fields[3].ref.setValue(0);
 	    		}
 		    },
-		    {
-		    	amode: [a_mode, 0, 2, 1],
-		    	onChange: v => {a_mode = v;}
+	    	{
+	    		amp: [mainamp, .5, 1.5, .1],
+	    		onChange: v => {mainamp = v;}	
 		    },
 		    {
-		    	mode1_hold: [hold, 1, 20, .1],
+		    	animation_hold: [hold, 1, 20, .1],
 		    	onChange: v => {hold = v;}
 		    },
 		    {
 		    	yrot: false,
 		    	onChange: v => {yrot = v;}
 		    },
-		    {
-		    	rot_n: [rot_n, 1, 9, 1],
-		    	onChange: v => {rot_n = v;}
-		    },
+		    // {
+		    // 	rot_n: [rot_n, 1, 9, 1],
+		    // 	onChange: v => {rot_n = v;}
+		    // },
 	    {
 	            name: 'color',
 	            open: false,
@@ -4428,30 +4585,40 @@ f 12//27 13//27 23//27 21//27 22//27
 	    draw: draw,
 	    loop: loop,
 	    unloop: unloop,
-	    gui: gui
+	    gui: gui,
+	    // on: false
 	};
 
 	const canvas = document.querySelector('#disp');
 	const canvas2 = document.querySelector('#disp2');
-	canvas.style.border = '1px solid black';
-	canvas2.style.border = '1px solid black';
+	// canvas.style.border = '1px solid black';
+	// canvas2.style.border = '1px solid black';
 
 	const res = [500, 500];
-	const lineview = new Lineview(canvas, [prog$1, prog], res);
 	const stroke = { w:.5, h: .24, s: .7, l: .5, a: 1 };
-	lineview.setStroke(stroke.h, stroke.s, stroke.l, stroke.a);
-	lineview.lineWidth(stroke.w);
+	const animate = true;
+	var lineview = null, glview = null, levelUpdate = null, idUpdate = null;
 
-	let animate = true;
 	const maingui = {
 	    fields: [{
-	            animate: animate,
-	            onChange: (v)=>{
-	                if(v) maingui.ctl.start();
-	                else maingui.ctl.stop();
-	            }
-	        },
-	        {
+	                animate: animate,
+	                onChange: (v)=>{
+	                    if(v) maingui.ctl.start(); else maingui.ctl.stop();
+	                }
+	            },
+	            {
+	                lev: [0, 0, 2000, 10],
+	                onChange: (v)=>{
+	                    if(levelUpdate) levelUpdate(v, glview);
+	                }
+	            },
+	            {
+	                id: (v)=>{
+	                    if(idUpdate) idUpdate(null, glview);
+	                }
+
+	            },
+	            {
 	            name: 'line',
 	            open: false,
 	            updateFrame: true,
@@ -4487,18 +4654,174 @@ f 12//27 13//27 23//27 21//27 22//27
 	    ]
 	};
 
-	const cb = {
-	    init: lineview.init.bind(lineview),
-	    frame: lineview.frame.bind(lineview),
-	    start: lineview.start.bind(lineview),
-	    stop: lineview.stop.bind(lineview),
-	    pgms: lineview.pgms
+	function start(userparams, _levelfunc, _idfunc){
+	    levelUpdate = _levelfunc;
+	    idUpdate = _idfunc;
+	    lineview = new Lineview(canvas, [prog$1, prog], res);
+	    lineview.setStroke(stroke.h, stroke.s, stroke.l, stroke.a);
+	    lineview.lineWidth(stroke.w);
+	    const cb = {
+	        init: lineview.init.bind(lineview),
+	        frame: lineview.frame.bind(lineview),
+	        start: lineview.start.bind(lineview),
+	        stop: lineview.stop.bind(lineview),
+	        pgms: lineview.pgms
+	    };
+	    const pgm = {chain:[prog$3, prog$2]};
+	    glview = new Glview(canvas2, pgm, res, 0, new GUI$1(), maingui, cb, userparams);
+	    glview.start();
+	    // maingui.fields[1].ref.setValue(userparams.level);
+	}
+
+	const LEVEL_MAX = 2000;
+	const OVERFLOW = false;
+
+	const glob_params = {
+	    // id derived values
+	    id: '',
+	    seed: 0,
+	    randf: 0,
+	    // pgive derived level values
+	    abs_level: 0,
+	    level: 0,
+	    norm_level: 0,
+	    ease_level: 0,
+	    level_max: LEVEL_MAX,
+	    use_overflow: OVERFLOW,
+	    overflow_num: 0,
+	    // mapping callbacks
+	    map_callbacks: {
+	        lsys_rot : params => lsys_rot(params),
+	        lsys_rule : params => lsys_rule(params),
+	        geom_poly : params => geom_poly(params)
+	    }
 	};
 
-	const pgm = {};
-	pgm.chain = [prog$3, prog$2];
-	// waves2.on = false;
-	const glview = new Glview(canvas2, pgm, res, 0, new GUI$1(), maingui, cb);
-	glview.start();
+	// lsys rule selection weights [index, weight] P_i = w_i/sum(weights)
+	const lsysweights = accumulateWeights( 
+	    [[0,1],[1,.6],[2,.7],[3,.5],[4,0],[5,.5],[6,.5],[7,.8],[8,.18],[9,.7],[10,.3],[11,.5],[12,.5],[13,0]]);
+
+	// polyhedron selection weights
+	const polyweights = accumulateWeights(
+	[[0,0],[1,0],[2,0],[3,1],[4,0],[5,1],[6,0],[7,1],[8,1],[9,1],[10,0],[11,1],[12,0],[13,0],[14,0]]);
+
+	// start program
+	(()=>{
+	    let p = urlParams();
+	    setParams(glob_params, p.level||500, p.id||randID());
+	    start(glob_params, guiLevelUpdate, guiIdUpdate);
+	})();
+
+
+	// lsys-rotation callback
+	function lsys_rot(p){
+	    return (p.randf < .5 ? 3 : 4) + Math.round(p.ease_level*2);
+	}
+
+	// lsys-rule callback
+	function lsys_rule(p){
+	    let rule =  weightedChoice(lsysweights.arr, lsysweights.sum, p.randf);
+	    console.log('rule', rule);
+	    return rule;
+	}
+
+	// polyedron callback
+	function geom_poly(p){
+	    return weightedChoice(polyweights.arr, polyweights.sum, p.randf);
+	}
+
+	// gui pgive update
+	function guiLevelUpdate(l, glv){
+	    setParams(glob_params, l, null);
+	    glv.params = glob_params;
+	    glv.frame();
+	}
+
+	// gui id update
+	function guiIdUpdate(v, glv){
+	    v = v||randID();
+	    setParams(glob_params, null, v);
+	    glv.params = glob_params;
+	    glv.frame();
+	    console.log('id',glob_params.id);
+	}
+
+	function randID(){
+	    let s = Array.from('111',v=>String.fromCharCode(Math.random()*93+33));
+	    return encodeURIComponent(s.join('')).replace(/%/g,'');
+	}
+
+	// set global params object
+	function setParams(params, level=null, id=null){
+	    if(level != null){
+	        let lev = +level;
+	        params.abs_level = lev;
+	        params.level = Math.min(lev, LEVEL_MAX);
+	        params.norm_level = params.level / LEVEL_MAX;
+	        params.ease_level = ease(params.norm_level);
+	        params.overflow_num = 0;
+	    }
+	    if(id != null){
+	        params.id = id;
+	        params.seed = strHashVal(id);
+	        params.randf = params.seed ?  mulberry32(params.seed)() : Math.random();
+	    }
+	}
+
+	function ease(x){ 
+	    return Math.min((2**(3.46*x)-1)/10,1);
+	    // return Math.min((2**(3*x)-1)/7,1);
+	}
+
+	function urlParams(){
+	    const params = new URLSearchParams(window.location.href);
+	    return {
+	        id: params.get('id'), 
+	        level: params.get('level'),
+	        gui: params.get('gui')
+	    };
+	}
+
+	// weights array -> cdf
+	function accumulateWeights(arr){
+	    arr.sort((a, b) => a[1]-b[1]);
+	    let sum = 0;
+	    for(let i = 0; i < arr.length; i++){
+	        sum += arr[i][1];
+	        if(i > 0) arr[i][1] += arr[i-1][1];
+	    }
+	    return {arr: arr, sum: sum};
+	}
+
+	// get weighted choice
+	function weightedChoice(arr, sum=1, rand){
+	    let r = rand*sum;
+	    for(let el of arr){
+	        if(r <= el[1]) return el[0];
+	    }
+	    return arr.length-1;
+	}
+
+	// id -> integer seed
+	function strHashVal(_str){
+	    let str = String(_str);
+	    let hash = 0;
+	    for (let i = 0, len = str.length; i < len; i++) {
+	        let chr = str.charCodeAt(i);
+	        hash = (hash << 5) - hash + chr;
+	        hash |= 0; 
+	    }
+	    return hash;
+	}
+
+	// seed -> random float generator
+	function mulberry32(a) {
+	    return function() {
+	      var t = a += 0x6D2B79F5;
+	      t = Math.imul(t ^ t >>> 15, t | 1);
+	      t ^= t + Math.imul(t ^ t >>> 7, t | 61);
+	      return ((t ^ t >>> 14) >>> 0) / 4294967296;
+	    }
+	}
 
 })();
