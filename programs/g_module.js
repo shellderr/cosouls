@@ -4,7 +4,7 @@ import {solids, polyhedra, models} from './model.js';
 import {loadObj, edgeList} from './loader.js';
 import * as g from './render.js';
 
-var ctx, ww, wh;
+var ctx, ww, wh, params;
 var obj, obj2, rot, rot2, proj, translate, view, colors, model, gmodels, scene;
 var p_i = 0;
 var viewx = 0, viewy = 0;
@@ -15,34 +15,76 @@ var rotz = -.12;
 var rr = PI;
 var scale = 1.4;
 var idx = 8;
-const atable = [2.5,3,3,2.5,1.2,1,3,2,1.5,2,1.1,1.1,1.1,1.1];
 
-var _h = .58, _s = 1, _l = .5, _a = 1; 
+const atable = [2.5,3,3,2.5,1.2,1,3,2,1.5,2,1.1,1.1,1.1,1.1];
+const scenevals = [
+{scale: 1.3, z: -.9, clip: 2.5}, // 0
+{scale: 1.2, z: -.78, clip: .5}, // 1
+{scale: 1.8, z: -.42, clip: -1.2}, // 2
+{scale: 1.4, z: -.69, clip: -.12}, // 3
+{scale: 1.5, z: -.667, clip: -.58}, // 4
+{scale: 1.3, z: -.57, clip: 5}, // 5
+{scale: 1.2, z: -.59, clip: -.35}, // 6
+// {scale: 1.4, z: -.4, clip: -1.12}, // 7
+{scale: 1.4, z: -.34, clip: -1.12}, // 7
+{scale: 1.4, z: -.68, clip: 1}, // 8
+{scale: 1.1, z: -.8, clip: .73}, // 9
+{scale: 1., z: -.66, clip: .5}, // 10
+{scale: 1.1, z: -.72, clip: -.12}, // 11
+{scale: 1, z: -.9, clip: .8}, // 12
+{scale: 1.1, z: -.69, clip: -.2}, // 13
+{scale: .9, z: -.97, clip: 2.5}];// 14
+
+var _h = .7, _s = .8, _l = .56, _a = 1; 
 var stroke =  hlsaStr(_h, _s, _l, _a);
 var useStroke = true;
+var update = {id: null, level: null};
 
-function setup(_ctx, _w, _h){
-    ctx = _ctx;  ww = _w; wh = _h;
-    obj = load(polyhedra, idx)
-    rot = g.create_rot(rotx*rr, roty*rr, rotz*rr);
-    translate = [[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,1]];
-    translate[3][2] = translatez;
-    proj = g.create_proj(scale,.5,.3);
-    view = g.lookAt([viewx*1, viewy*1, -1.], [0,0, .1], .0);
-    model = g.create_model(0, obj.v, obj.i, rot, translate, view);
-    scene = g.create_canvas_scene(ctx, ww, wh, model, null, proj);
-    scene.z_clip = 5;
+function setup(ctl){
+    ctx = ctl.ctx; 
+    ww = ctl.w; 
+    wh = ctl.h;
+    params = ctl.params;
+    setModel(params);
 }
 
-function load(set, idx, amp=.5){
-    let _obj = loadObj(Object.values(set)[idx], 1/atable[idx]);
+function load(set, idx, amp=1){
+    let _obj = loadObj(Object.values(set)[idx], amp/atable[idx]);
     let o = {v: _obj.vertices.v, i: _obj.indices.v};
     o.i = edgeList(o.i);
     return o;
 }
 
+function setModel(params){ 
+    if(update.id != params.id){
+        update.id = params.id;
+        if(params && params.map_callbacks.geom_poly)
+            idx = params.map_callbacks.geom_poly(params);
+        obj = load(polyhedra, idx);
+        let s = scenevals[idx];
+        rot = g.create_rot(rotx*rr, roty*rr, rotz*rr);
+        translate = [[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,1]];
+        translate[3][2] = s.z;
+        proj = g.create_proj(s.scale,.5,.3);
+        view = g.lookAt([viewx*1, viewy*1, -1.], [0,0, .1], .0);
+        model = g.create_model(0, obj.v, obj.i, rot, translate, view);
+        scene = g.create_canvas_scene(ctx, ww, wh, model, null, proj);
+        scene.z_clip = s.clip;
+        console.log('poly', idx);
+    }
+}
+
+function setScene(idx){
+    let s = scenevals[idx];
+    if(!s) return;
+    scene.p_mat = g.create_proj(s.scale,.5,.3);
+    translate[3][2] = s.z;
+    scene.z_clip = s.clip;
+}
+
 function draw(){
     if(useStroke) ctx.strokeStyle = stroke;
+    setModel(params);
     g.canvasrender(scene);
 }
 
@@ -60,9 +102,9 @@ function unloop(){
 
 const gui = {
     name: 'geom',
-    open: true,
+    open: false,
     switch: true,
-    updateFame: true,
+    updateFrame: true,
     fields:[
         {
             idx: idx,
@@ -73,6 +115,7 @@ const gui = {
                 obj = load(polyhedra, v);
                 model = g.create_model(idx, obj.v, obj.i, rot, translate, view);
                 scene.models[0] = model;
+                setScene(v);
             }
         },
         {
@@ -117,7 +160,7 @@ const gui = {
         {
             translate_z: translatez,
             min:-1,
-            max:1,
+            max:.1,
             step:.01,
             onChange: (v)=>{
                 translatez = v;
