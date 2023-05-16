@@ -1,8 +1,17 @@
+/*(c) shellderr 2023 BSD-1*/
+
 import start from './display.js';
 
-const LEVEL_MAX = 2000;
+const LEVEL_MAX = 20000;
 const OVERFLOW = false;
-
+const fetch_params = false;
+const log_params = false;
+const fetch_url = 'http://localhost:5000/random';
+/*
+    params: 'id', 'pgive'or'level', 's' 
+    's' is a cipher string for url paramaters and is decoded if present
+    fetch_params sets the input method: true = json fetch, false = url parse.
+*/
 const glob_params = {
     // id derived values
     id: '',
@@ -21,21 +30,25 @@ const glob_params = {
         lsys_rot : params => lsys_rot(params),
         lsys_rule : params => lsys_rule(params),
         geom_poly : params => geom_poly(params)
-    }
+    },
+    // global line colors, set css string manually to init
+    line_l: {h:.2, s:.77, l:.72, a:1, stroke: 'rgb(223.4, 241.5, 151.2, 1)'},
+    line_g: {h:.7, s:.8,  l:.56, a:1, stroke: 'rgb(89, 53, 232.56, 1)'}
 };
 
 // lsys rule selection weights [index, weight] P_i = w_i/sum(weights)
 const lsysweights = accumulateWeights( 
-    [[0,1],[1,.6],[2,.7],[3,.5],[4,0],[5,.5],[6,.5],[7,.8],[8,.18],[9,.7],[10,.3],[11,.5],[12,.5],[13,0]]);
+    [[0,1],[1,.75],[2,.66],[3,.5],[4,0],[5,.5],[6,.5],[7,.8],[8,.18],[9,.6],[10,0],[11,.5],[12,.3],[13,0]]);
 
 // polyhedron selection weights
 const polyweights = accumulateWeights(
-[[0,0],[1,0],[2,0],[3,1],[4,0],[5,1],[6,0],[7,1],[8,1],[9,1],[10,0],[11,1],[12,0],[13,0],[14,0]]);
+[[0,1.2],[1,1],[2,2],[3,.3],[4,.7],[5,.7]]);
 
-// start program
-(()=>{
-    let p = urlParams();
-    setParams(glob_params, p.level||500, p.id||randID());
+// -------- start program ----------
+(async ()=>{
+    let p = fetch_params ? await jsonParams(fetch_url) : urlParams();
+    if(log_params) console.log(p);
+    setParams(glob_params, p.level||2000, p.id||randID());
     start(glob_params, guiLevelUpdate, guiIdUpdate);
 })();
 
@@ -48,13 +61,19 @@ function lsys_rot(p){
 // lsys-rule callback
 function lsys_rule(p){
     let rule =  weightedChoice(lsysweights.arr, lsysweights.sum, p.randf);
+    /// #if GUI
     console.log('rule', rule);
+    /// #endif
     return rule;
 }
 
-// polyedron callback
+// polyhedron callback
 function geom_poly(p){
-    return weightedChoice(polyweights.arr, polyweights.sum, p.randf);
+    let poly = weightedChoice(polyweights.arr, polyweights.sum, p.randf);
+    /// #if GUI
+    console.log('poly', poly);
+    /// #endif
+    return poly;
 }
 
 // gui pgive update
@@ -73,9 +92,36 @@ function guiIdUpdate(v, glv){
     console.log('id',glob_params.id);
 }
 
+// test IDs
 function randID(){
     let s = Array.from('111',v=>String.fromCharCode(Math.random()*93+33));
     return encodeURIComponent(s.join('')).replace(/%/g,'');
+}
+
+// get params from url: id, pgive or level, s for cipher
+function urlParams(){
+    const params = new URLSearchParams(window.location.href);
+    let p = {
+        id: params.get('id'), 
+        pgive: params.get('pgive'),
+        level: params.get('level'),
+        cipher: params.get('s')
+    };
+    if(p.pgive) p.level = p.pgive;
+    return checkCipher(p);
+}
+
+// fetch params from server
+async function jsonParams(url){
+    let response = await fetch(url, {
+        mode: 'cors',
+        accept: 'application/json'
+    }).catch(err => console.log(err));
+    if(response && response.ok){
+        let data = await response.json();
+        if(data.pgive) data.level = data.pgive;
+        return data;
+    }else console.log(response);
 }
 
 // set global params object
@@ -95,18 +141,48 @@ function setParams(params, level=null, id=null){
     }
 }
 
+// decode params from cipher string if present: &s=
+function checkCipher(p){
+    if(p.cipher){
+        try{
+            let s = decodeURLCipher(p.cipher);
+            const params = new URLSearchParams(s);
+            p.id = params.get('id');
+            p.level = params.get('pgive') || params.get('level');            
+        }catch(err){
+            console.log(err);
+        }
+    }
+    return p;
+}
+
+//Copyright (c) 2016, Wei He rot47.net
+function rot47(x){
+    let s=[];
+    for(let i=0; i < x.length; i++){
+        let j=x.charCodeAt(i);
+        if((j>=33)&&(j<=126)){
+            s[i]=String.fromCharCode(33+((j+ 14)%94));
+        }else{
+            s[i]=String.fromCharCode(j);
+        }
+    }
+    return s.join('');
+}
+
+// crypto.en(de)crypt with AES settings could also be used.
+// encode url params into rot47 cipher (for server)
+function encodeURLCipher(str){
+    return encodeURIComponent(rot47(str));
+}
+// decode cipher (for client)
+function decodeURLCipher(str){
+    return rot47(decodeURIComponent(str));
+}
+
 function ease(x){ 
     return Math.min((2**(3.46*x)-1)/10,1);
     // return Math.min((2**(3*x)-1)/7,1);
-}
-
-function urlParams(){
-    const params = new URLSearchParams(window.location.href);
-    return {
-        id: params.get('id'), 
-        level: params.get('level'),
-        gui: params.get('gui')
-    };
 }
 
 // weights array -> cdf

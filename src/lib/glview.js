@@ -1,3 +1,5 @@
+/*(c) shellderr 2023 BSD-1*/
+
 // createShaderProgram, setBuffers, enableAttributes, setUniforms, drawObj
 import * as mgl from './minigl.js';
 
@@ -183,10 +185,10 @@ function initCanvas(canvas, res){
     canvas.style.height = res[1]+'px';    
 }
 
-function merge(dest, template, ctl){
+function merge(dest, template, ctl){ 
+    if(ctl) template.ctl = ctl;
     for(let prop in template) 
     	if(dest[prop] == null) dest[prop] = template[prop];
-    dest.ctl = ctl;
 }
 
 function initGui(gui, ctl, mainobj){

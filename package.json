@@ -1,0 +1,30 @@
+{
+  "name": "cosouls",
+  "version": "1.0.0",
+  "description": "",
+  "main": "src/main.js",
+  "type": "module",
+  "scripts": {
+    "build": "webpack --mode development",
+    "prod": "webpack --mode production",
+    "dev": "webpack --mode development --env gui=true",
+    "serve": "webpack serve --mode development",
+    "serve-dev": "webpack serve --mode development --env gui=true",
+    "serve-json": "nodemon test/serve.js",
+    "prep": "node ./src/programs/prepmodels.js"
+  },
+  "author": "shellderr",
+  "license": "BSD-1",
+  "dependencies": {
+    "ifdef-loader": "^2.3.2",
+    "terser-webpack-plugin": "^5.3.8",
+    "webpack": "^5.82.1",
+    "webpack-cli": "^5.1.1",
+    "webpack-dev-server": "^4.15.0"
+  },
+  "devDependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.18.2",
+    "nodemon": "^2.0.22"
+  }
+}

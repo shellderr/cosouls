@@ -1,3 +1,5 @@
+/*(c) shellderr 2023 BSD-1*/
+
 const {sin, cos, floor, abs, sqrt, PI} = Math;
 
 const defaultrule = {
@@ -66,21 +68,6 @@ function mulberry32(a) {
     }
 }
 
-function seedRand(s) {
-    var mask = 0xffffffff;
-    var m_w  = (123456789 + s) & mask;
-    var m_z  = (987654321 - s) & mask;
-
-    return function() {
-      m_z = (36969 * (m_z & 65535) + (m_z >>> 16)) & mask;
-      m_w = (18000 * (m_w & 65535) + (m_w >>> 16)) & mask;
-
-      var result = ((m_z << 16) + (m_w & 65535)) >>> 0;
-      result /= 4294967296;
-      return result;
-    }
-}
-
 function sequence(rules, n, _rand){
 	let str = rules.axiom;
 	let rand = _rand ? mulberry32(_rand) : Math.random;
@@ -130,6 +117,7 @@ function recenter(geom, x, y, shift=true){
 	cz /= geom.length;
 	if(!shift){cx = cy = cz = -1;}
 	for(let i = 0; i < geom.length; i++){
+		// geom[i] = [geom[i][0]-cx, geom[i][1]-cy, geom[i][2]-cz]
 		geom[i][0] -=cx;
 		geom[i][1] -=cy;
 		geom[i][2] -=cz;

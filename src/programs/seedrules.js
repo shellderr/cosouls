@@ -1,3 +1,5 @@
+/*(c) shellderr 2023 BSD-1*/
+
 const arr = [
 { //0
     axiom: 'F',

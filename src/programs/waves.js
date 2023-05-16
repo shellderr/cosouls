@@ -1,17 +1,14 @@
+/*(c) shellderr 2023 BSD-1*/
+
 const fs = /*glsl*/`#version 300 es
     precision mediump float;
     out vec4 fragColor;
     uniform vec2 resolution;
-    uniform vec2 mouse;
     uniform float time;
     #define glf gl_FragCoord
 	#define PI 3.14159265
 	#define _b 1.6
-	// uniform float hue;
-	// uniform float sep;
-	uniform float ch;
-	uniform float cs;
-	uniform float cv;
+	uniform vec3 col;
 	uniform float alpha;
 
 	vec2 b(float t, vec2 v){
@@ -21,16 +18,6 @@ const fs = /*glsl*/`#version 300 es
 	float ff(float n, float n2, float n3, float amp){
  		return ((sin(n)+1.)*(sin(n2)*(sin(n3))+1.)+log(((sin(PI+n)+1.)*(sin(PI+n2)+1.))+1.))*amp; 
 	}
-
-	vec3 rgb(float a){
-		return sin(a+vec3(.5,1.5,3))*.5+.5;
-	}
-
-    vec3 hsv2rgb(vec3 c){
-        vec4 K = vec4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);
-        vec3 p = abs(fract(c.xxx + K.xyz) * 6.0 - K.www);
-        return c.z * mix(K.xxx, clamp(p - K.xxx, 0.0, 1.0), c.y);
-    }
 
 	void main(){
 	    vec2 uv = glf.xy/resolution.xy;
@@ -56,14 +43,26 @@ const fs = /*glsl*/`#version 300 es
 	    f2 += ff(n+d, n2+d, n3+d, amp);
 	    
 	    float v = (f2-f)/d;
-	    // vec3 c = (1.-vec3(v))*rgb(hue);
-	    vec3 c = hsv2rgb(vec3(ch, cs, cv));
 	    float fade = min(.2, max(alpha, .01))*5.;
 	    float alpha = smoothstep(clamp(v*fade, -2., 0.), .6, alpha*.6);
-	    fragColor = vec4(c, alpha);
+	    fragColor = vec4(col, alpha);
 	}
 
 `;
+
+// stackoverflow.com/a/54024653
+function hsv2rgb(h,s,v){ //[ 0,1]->[0,1]
+  let f= (n,k=(n+h*6)%6) => v - v*s*Math.max( Math.min(k,4-k,1), 0);     
+  return [f(5),f(3),f(1)];       
+}
+
+var hsv = [.75, 1, .6];
+var c = hsv2rgb(...hsv);
+
+// vals from main params can be received here
+function setup(prog){
+	console.log(Object.keys(prog.ctl.params))
+}
 
 const gui = {
     name: 'wave',
@@ -72,25 +71,17 @@ const gui = {
     updateFrame: true,
     fields:[
     	{
-    		h: [.75,0,1,.01],
-    		onChange: v=> {prog.uniforms.ch = v;}
+    		h: [hsv[0], 0,1,.1],
+    		onChange: v=> {hsv[0] = v; prog.uniforms.col =hsv2rgb(...hsv);}
     	},
     	{
-    		s: [1,0,1,.01],
-    		onChange: v=> {prog.uniforms.cs = v;}
+    		s: [hsv[1], 0,1,.1],
+    		onChange: v=> {hsv[1] = v; prog.uniforms.col =hsv2rgb(...hsv);}
     	},
     	{
-    		v: [.6,0,1,.01],
-    		onChange: v=> {prog.uniforms.cv = v;}
+    		v: [hsv[2], 0,1,.1],
+    		onChange: v=> {hsv[2] = v; prog.uniforms.col =hsv2rgb(...hsv);}
     	},
-        // {
-        //     hue: [3.77, 0, 5, .01],
-        //     onChange : (v)=>{prog.uniforms.hue = v;}
-        // },
-        // {
-        //     sep: [1, 0, 2, .01],
-        //     onChange : (v)=>{prog.uniforms.sep = v;}
-        // },
         {
             alpha: [.04, 0, .5, .01],
             onChange : (v)=>{prog.uniforms.alpha = v;}
@@ -102,13 +93,10 @@ const prog = {
 	fs: fs,
 	gui: gui,
 	uniforms: {
-		// hue: 3.77,
-		// sep: 1 
-		ch: .75,
-		cs: 1.,
-		cv: .6,
-		alpha: .04,
-	}
+		col: c,
+		alpha: .04
+	},
+	// setupcb : setup
 };
 
 export default prog;

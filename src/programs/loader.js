@@ -1,3 +1,5 @@
+/*(c) shellderr 2023 BSD-1*/
+
 function loadObj(str, scale){
 
     let obj = {
@@ -87,4 +89,4 @@ function edgeList(elements){
     return Object.values(edges);
 }
 
-export{loadObj, edgeList};
+export default {loadObj, edgeList};

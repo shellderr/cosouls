@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="shortcut icon" href="#">
+	<title>test</title>
+	<style type="text/css">
+		body{
+			background-color: #d3d3d3;
+		}
+		.container{
+			display: inline-block;
+		}
+		.links{
+			width: 90vw;
+			margin: auto;
+			display: block;
+		}
+		.links p{
+			margin-left: 30px;
+			padding: 10px;
+		}
+		.blurb{
+			padding-top: 10px; 
+			text-decoration: underline;
+			text-underline-offset: 4px;
+			margin-left: 40px; 
+			width: 50vw;
+		}
+	</style>
+</head>
+<body>
+<div class="container">
+	<div class="links" >
+	<div class="blurb">
+		To test json: run "npm run serve-json" and set fetch_params to true.
+	</div>		
+	</div>	
+	<div class="links" id="links">
+		<p>url-links</p>
+	</div>
+	<div class="links" id="cipherlinks">
+		<p>cipher-links</p>
+	</div>
+</div>
+<script type="text/javascript">
+		//Copyright (c) 2016, Wei He (ISC) rot47.net
+		function rot47(x, m=0){
+		    let s=[];
+		    for(let i=0; i < x.length; i++){
+		    	let k = i%3;
+		        let j=x.charCodeAt(i);
+		        if((j>=33)&&(j<=126)){
+		            s[i]=String.fromCharCode(33+((j+ 14)%94)+k*m);
+		        }else{
+		            s[i]=String.fromCharCode(j);
+		        }
+		    }
+		  return s.join('');
+		}
+
+		function encodeURL(str){
+			return encodeURIComponent(rot47(str), 0);
+		}
+		function decodeURL(str){
+			return rot47(decodeURIComponent(str), 0);
+		}
+
+		function urlstr(){
+			let id = crypto.randomUUID().split('-')[0];
+			let pgive = 1000 + Math.floor(Math.random()*95)*200;
+			return `&id=${id}&pgive=${pgive}`;
+		}
+
+		function genLinks(n, div, baseroute, cipher){
+			let ul = document.createElement('ul');
+			ul.style.width = '100%';
+			for(let i = 0; i < n; i++){
+				let li = document.createElement('li');
+				li.style.width = '100%';
+				li.style.listStyleType = 'none';
+				let a = document.createElement('a');
+				let link = baseroute + '/?';
+				let s = urlstr();
+				link += cipher ? '&s='+encodeURL(s) : s;
+				a.href = link; a.innerHTML = link; a.target = '_blank';
+				li.appendChild(a); ul.appendChild(li);
+			}
+			div.appendChild(ul);
+		}
+
+		let div1 = document.querySelector('#links');
+		let div2 = document.querySelector('#cipherlinks');
+		genLinks(8, div1, 'http://localhost:8080', 0);
+		genLinks(8, div2, 'http://localhost:8080', 1);
+
+</script>
+</body>
+</html>

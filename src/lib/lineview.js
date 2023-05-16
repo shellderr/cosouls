@@ -1,3 +1,5 @@
+/*(c) shellderr 2023 BSD-1*/
+
 class Lineview{
 
     constructor(canvas, pgms, res=[500,500], gui){

@@ -1,3 +1,4 @@
+/*(c) shellderr 2023 BSD-1*/
 
 function createShaderProgram(gl, obj){
 	let vs = gl.createShader(gl.VERTEX_SHADER);
