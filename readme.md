@@ -1,6 +1,5 @@
 # Cosouls 
 
-
 ### Description
 
 This project generates a display unique to each user which grows in proportion to the user's level of PGive.
@@ -15,9 +14,7 @@ Main.js is the entry point of the program. This file gets the input parameters I
 
 Display.js initializes everything to be displayed using two classes `lineview` and `glview` which respectively run the canvas API and WebGL animations. Everything controlled by these classes is in the programs folder. The two line drawing programs are `l-module` and `g-module` which create the L-system and 3D geometry. The shader modules `waves` and `waves2` are also in the programs folder.
 
-
 ### Available Parameters 
-
 ---
 
 Most of the available parameters are in **Main.js** These include:
@@ -26,7 +23,7 @@ Most of the available parameters are in **Main.js** These include:
 
 `OVERFLOW` - An option to reset the level if PGive exceeds `LEVEL_MAX`. This only exists to allow a possible implementation of multiple designs for every time the value wraps level_max, so is best to leave false.
 
-`fetch_params` - If true the program fetches the input parameters as JSON from a server endpoint. Otherwise, it parses them using a query string in the URL ie: `?&id=asdf&pgive=5500`. The parameter "s" can be used alone in which case it's assumed to be obfuscated with the `encodeURLCipher` function in which case it's decoded and then parsed.
+`fetch_params` - If true the program fetches the input parameters as JSON from a server endpoint. Otherwise, it parses them using a query string in the URL ie: ***?&id=asdf&pgive=5500***. The parameter "s" can be used alone where it's assumed to be obfuscated with the `encodeURLCipher` function in which case it's decoded and then parsed.
 
 `log_params` - Console.log the received parameters.
 
