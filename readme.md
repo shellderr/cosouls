@@ -63,7 +63,7 @@ Color and alpha uniform values can be set for the **Waves.js** shader in `prog.u
 
 The `package.json` includes 7 available `npm run` scripts:
 
-`build`: Build `bundle.js` in development mode with the source map available ti the browser and no minimization.
+`build`: Build `bundle.js` in development mode with the source map available to the browser and no minimization.
 
 `prod`: Build in production mode without the source map and minimized.
 

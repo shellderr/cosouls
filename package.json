@@ -7,9 +7,9 @@
   "scripts": {
     "build": "webpack --mode development",
     "prod": "webpack --mode production",
-    "dev": "webpack --mode development --env gui=true",
+    "dev": "webpack --mode development --env gui",
     "serve": "webpack serve --mode development",
-    "serve-dev": "webpack serve --mode development --env gui=true",
+    "serve-dev": "webpack serve --mode development --env gui",
     "serve-json": "nodemon test/serve.js",
     "prep": "node ./src/programs/prepmodels.js"
   },
