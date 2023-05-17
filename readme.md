@@ -57,7 +57,7 @@ Some parameters are hidden in **l_module.js** , **g_module.js**,  and the **wave
 
 ---
 
-Color and alpha uniform values can be set for the **Waves.js** shader in `prog.uniforms`. In **Waves2.js** there are two color values for diffuse ans specular color, `amp` which is spatial scale, `tscale` or time, alpha ,and a lighting vector with the uniform name `vmouse`.
+Color and alpha uniform values can be set for the **Waves.js** shader in `prog.uniforms`. In **Waves2.js** there are two color values for diffuse and specular color, `amp` which is spatial scale, `tscale` or time, alpha ,and a lighting vector with the uniform name `vmouse`.
 
 ### Running and testing
 
@@ -73,7 +73,7 @@ The `package.json` includes 7 available `npm run` scripts:
 
 `serve-dev`: Live-serve with the GUI activated.
 
-`serve-json`: Start a test server to run in parallel fto test JSON fetching. The server is  in `test/serve.js` where there is also an html file that can be used do demo different query strings or cipher coded strings.
+`serve-json`: Start a test server to run in parallel to test JSON fetching. The server is in `test/serve.js` where there is also an html file that can be used do demo different query strings or cipher coded strings.
 
 `prep`: Pre-prepares the polyhedron models and is only necessary to add new .obj models as can be seen in `selectmodels.js`.
 
