@@ -13,7 +13,7 @@ import lmod from "./programs/l_module.js";
 
 const canvas = document.querySelector('#disp');
 const canvas2 = document.querySelector('#disp2');
-const res = [600, 600];
+const resolution = [600, 600];
 
 var linewidth = .5, animate = true;
 var lineview = null, glview = null, levelUpdate = null, idUpdate = null, params = null;
@@ -139,7 +139,7 @@ export default function start(userparams, _levelfunc, _idfunc){
     levelUpdate = _levelfunc;
     idUpdate = _idfunc;
     params = userparams;
-    lineview = new Lineview(canvas, [gmod, lmod], res);
+    lineview = new Lineview(canvas, [gmod, lmod], resolution);
     lineview.lineWidth(linewidth);
     const cb = {
         init: lineview.init.bind(lineview),
@@ -150,9 +150,9 @@ export default function start(userparams, _levelfunc, _idfunc){
     };
     const pgm = {chain:[waves, waves2]};
     /// #if GUI
-    glview = new Glview(canvas2, pgm, res, 0, new dat.GUI(), maingui, cb, userparams);
+    glview = new Glview(canvas2, pgm, resolution, 0, new dat.GUI(), maingui, cb, userparams);
     /// #else
-    glview = new Glview(canvas2, pgm, res, 0, null, null, cb, userparams);
+    glview = new Glview(canvas2, pgm, resolution, 0, null, null, cb, userparams);
     /// #endif
     if(animate) glview.start(); else glview.frame();
 }
