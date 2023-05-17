@@ -57,7 +57,7 @@ Some parameters are hidden in **l_module.js** , **g_module.js**,  and the **wave
 
 ---
 
-Color and alpha uniform values can be set for the **Waves.js** shader in `prog.uniforms`. In **Waves2.js** there are two color values for diffuse ans specular color, `amp` which is spatial scale, `tscale` or time, alpha ,and a lighting vector with the uniform name `vmouse`.
+Color and alpha uniform values can be set for the **Waves.js** shader in `prog.uniforms`. In **Waves2.js** there are two color values for diffuse and specular color, `amp` which is spatial scale, `tscale` or time, alpha ,and a lighting vector with the uniform name `vmouse`.
 
 ### Running and testing
 
