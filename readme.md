@@ -50,7 +50,7 @@ Other available parameters are in **Display.js**.
 
 ---
 
-Some parameters are hidden in `l_module.js` , `g_module,js`,  and the `waves` and `waves2` shader modules. The main purpose of GUI mode is to experiment with these easily in addition to some pof the reviously listed ones.
+Some parameters are hidden in **l_module.js** , **g_module.js**,  and the **waves.js** and **waves2.js** shader modules. The main purpose of GUI mode is to experiment with these easily in addition to some of the reviously listed ones.
 
 `mainamp` - A master radius setting for the L-system (a minimum radius setting will be useful and is on the todo list to add).
 
