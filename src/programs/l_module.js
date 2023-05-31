@@ -1,6 +1,6 @@
 /*(c) shellderr 2023 BSD-1*/
 
-const {cos, sin, pow, sqrt, abs, sign, min, max, floor, round, random, PI} = Math;
+const {cos, sin, pow, sqrt, log, abs, sign, min, max, floor, round, random, PI} = Math;
 
 import lsystem from './l-system.js';
 import rules from './seedrules.js';
@@ -13,13 +13,15 @@ var rule =  0;
 var n_i = 0; 
 var rot_n = 6;
 var theta = 0;
-var draw_mod = repeat_rot; 
 var seed = 0;
-var mirror = true;
-var amp = .7;
-var mainamp = 1.4;
 var hold = 20;
 var _time = 0;
+var amp = .7;
+var mainamp = 1.3;
+var low_amp_shift = 0;
+var lev_bump = 0;
+var logbase = 30;
+var logoffs = 0.01;
 
 const idmat = [[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,1]];
 var qr, qi, qs;
@@ -63,17 +65,28 @@ function updateParams(ctl){
 
 	stroke = ctl.params.line_l.stroke;
 
-	lev = ctl.params.ease_level;
-	let lin = ctl.params.norm_level;
+	// lev = min(ctl.params.ease_level+lev_bump,1);
+	// let lin = min(ctl.params.norm_level+lev_bump,1);
+
+	lev = logScale(ctl.params.ease_level, logbase, logoffs);
+	let lin = logScale(ctl.params.norm_level, logbase, logoffs);
+
 	let b = getBounds(model,lev);
-	amp = .7*(.33*smstep(lev, 1, .0, .4) + 
-	.6*smstep(lin, .2, .8, .4)/b);
+	let s = low_amp_shift*(lin < .4 ? 1-lin:0);
+
+	amp = .66*(.33*smstep(lev, 1, 0, .4) + 
+		.66*smstep(lin+s, .2, .8, .4+s*.5)/b);
+
 	return true;
 }
 
 function smstep(x, start=0, end=1, _floor=0){
 	let a = max(min((x-start)/(end-start),1),0);
 	return (1-_floor)*(3*a**2-2*a**3)+_floor;
+}
+
+function logScale(x, b, ofs){
+	return log(1+ofs*b+x*b-x-ofs*b*x)/log(b);
 }
 
 function getBounds(model, f){
@@ -89,7 +102,7 @@ function getBounds(model, f){
 function draw(ctl){
 	updateParams(ctl);
 	ctx.strokeStyle = stroke;
-	display(ctx, model, lev, draw_mod);
+	display(ctx, model, lev, repeat_rot);
 }
 
 var vz = [0,0,1];
@@ -108,8 +121,8 @@ function loop(){
 		qrot(model, qs);
 		azlast = az;		
 	}
-	display(ctx, model, min(Math.log(1+lev*5)*_time,lev), draw_mod);	
-	// display(ctx, model, lev, draw_mod);	
+	display(ctx, model, min(log(1+lev*5)*_time,lev), repeat_rot);	
+	// display(ctx, model, lev, repeat_rot);	
 }
 
 function unloop(){
@@ -131,9 +144,9 @@ function qrot(model, q){
 	}
 }
 
-function line_m(a, b, mirror){
+function line_m(a, b){
 	line(ctx, ww, wh, a[0], a[1], b[0], b[1]);
-	if(mirror) line(ctx, ww, wh, -a[0], a[1], -b[0], b[1]);	
+	line(ctx, ww, wh, -a[0], a[1], -b[0], b[1]);	
 }
 
 function display(ctx, model, f, cb){
@@ -142,7 +155,7 @@ function display(ctx, model, f, cb){
 		let a = model.v[model.i[i][0]]; 
 		let b = model.v[model.i[i][1]];
 		if(cb){cb(a, b)}
-		else line_m(a, b, mirror);		
+		else line_m(a, b);		
 	}
 }
 
@@ -152,7 +165,7 @@ function repeat_rot(a, b){
 	let rot = create_rot(t+theta);
 		let aa = vec_mul(a, rot);
 		let bb = vec_mul(b, rot);
-		line_m(aa, bb, mirror);		
+		line_m(aa, bb);		
 	}
 }
 
@@ -182,7 +195,7 @@ function ease(x){
 
 const gui = {
     name: 'l-system',
-    open: false,
+    open: true,
     switch: true,
     updateFrame: true,
     fields:[
@@ -200,6 +213,18 @@ const gui = {
 	    		prog.ctl.frame();
     		}
 	    },
+		{
+			log_base:[logbase, 2, 50, 1],
+			onChange: (v)=>{logbase = v;}
+		},
+		{
+			log_offs:[logoffs, 0, .05, .001],
+			onChange: (v)=>{logoffs = v;}
+		},
+		{
+			low_amp_shift:[low_amp_shift, 0, .5, .01],
+			onChange: (v)=>{low_amp_shift = v;}
+		},
     	{
     		amp: [mainamp, .5, 1.5, .1],
     		onChange: v => {mainamp = v;}	

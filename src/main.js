@@ -55,7 +55,8 @@ const polyweights = accumulateWeights(
 
 // lsys-rotation callback
 function lsys_rot(p){
-    return (p.randf < .5 ? 3 : 4) + Math.round(p.ease_level*2);
+    // return (p.randf < .5 ? 3 : 4) + Math.round(p.ease_level*2);
+    return 3 + Math.round(p.norm_level*2);
 }
 
 // lsys-rule callback

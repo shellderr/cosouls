@@ -4,7 +4,7 @@
 
 This project generates a display unique to each user which grows in proportion to the user's level of PGive.
 
-The main element is an [L-System](http://paulbourke.net/fractals/lsys/)  mirrored radially. The User's ID is used as a seed which affects the L-system growth. Additionally there are 14 L-System rules, one of which is assigned to the user based on the seed. The secondary element is a wireframe background which is also determined by the seed.
+The main element is an [L-System](http://paulbourke.net/fractals/lsys/) mirrored radially. The User's ID is used as a seed which affects the L-system growth. Additionally there are 14 L-System rules, one of which is assigned to the user based on the seed. The secondary element is a wireframe background which is also determined by the seed.
 
 The visualization uses two overlaid canvases. One uses a drawing context to draw the L-system and wireframe shapes. The second canvas uses a WebGL context using fragment shaders as a background animation.
 
