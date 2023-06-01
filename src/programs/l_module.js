@@ -64,17 +64,15 @@ function updateParams(ctl){
 		rot_n = ctl.params.map_callbacks.lsys_rot(ctl.params);
 
 	stroke = ctl.params.line_l.stroke;
-
 	lev = logScale(ctl.params.norm_level, logbase, logoffs);
-	let lin = logScale(ctl.params.norm_level, logbase, logoffs);
 
 	let b = getBounds(model,lev);
-	let s = low_amp_shift*(lin < .4 ? 1-lin:0);
+	let s = low_amp_shift*(lev < .4 ? 1-lev:0);
 	// amp = radius as a function of pgive level
 	// two smoothstep functions are x-fading between the log-scaled level
 	// and the level clamped by getBounds. amp = 1/b would be constant radius
-	amp = .7*(.33*smstep(lin, 1, 0, .4) + 
-		.7*smstep(lin+s, .2, .8, .4+s*.5)/b);
+	amp = .7*(.33*smstep(lev, 1, 0, .4) + 
+		.7*smstep(lev+s, .2, .8, .4+s*.5)/b);
 
 	return true;
 }
