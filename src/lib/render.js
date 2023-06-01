@@ -1,4 +1,4 @@
-/*(c) shellderr 2023 BSD-1*/
+/*(c) shellderr 2023 BSD-2*/
 
 const {sin, cos, floor, abs, sqrt, PI} = Math;
 const idmat = [[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,1]];

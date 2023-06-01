@@ -1,4 +1,4 @@
-/*(c) shellderr 2023 BSD-1*/
+/*(c) shellderr 2023 BSD-2*/
 
 import Glview from './lib/glview.js';
 import Lineview from "./lib/lineview.js";
@@ -15,8 +15,9 @@ const canvas = document.querySelector('#disp');
 const canvas2 = document.querySelector('#disp2');
 const resolution = [600, 600];
 
-var linewidth = .5, animate = true;
+var linewidth = .75, animate = true;
 var lineview = null, glview = null, levelUpdate = null, idUpdate = null, params = null;
+var levmax = 20000;
 
 /// #if GUI
 animate = false;
@@ -31,6 +32,13 @@ const maingui = {
                 pgive: [0, 0, 20000, 10],
                 onChange: (v)=>{
                     if(levelUpdate) levelUpdate(v, glview);
+                }
+            },
+            {
+                scaled: [0,0,1, .01],
+                onChange: (v)=>{
+                    let i = (26**v-1)/25;
+                    maingui.fields[1].ref.setValue(i*levmax);
                 }
             },
             {
@@ -141,6 +149,7 @@ export default function start(userparams, _levelfunc, _idfunc){
     params = userparams;
     lineview = new Lineview(canvas, [gmod, lmod], resolution);
     lineview.lineWidth(linewidth);
+    levmax = userparams.level_max;
     const cb = {
         init: lineview.init.bind(lineview),
         frame: lineview.frame.bind(lineview),

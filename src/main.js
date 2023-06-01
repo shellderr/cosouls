@@ -1,4 +1,4 @@
-/*(c) shellderr 2023 BSD-1*/
+/*(c) shellderr 2023 BSD-2*/
 
 import start from './display.js';
 
@@ -38,7 +38,7 @@ const glob_params = {
 
 // lsys rule selection weights [index, weight] P_i = w_i/sum(weights)
 const lsysweights = accumulateWeights( 
-    [[0,1],[1,.75],[2,.66],[3,.5],[4,0],[5,.5],[6,.5],[7,.8],[8,.18],[9,.6],[10,0],[11,.5],[12,.3],[13,0]]);
+    [[0,1],[1,.8],[2,.6],[3,.4],[4,0],[5,.5],[6,.4],[7,.8],[8,.2],[9,.5],[10,0],[11,.2],[12,.4],[13,0]]);
 
 // polyhedron selection weights
 const polyweights = accumulateWeights(
@@ -55,8 +55,7 @@ const polyweights = accumulateWeights(
 
 // lsys-rotation callback
 function lsys_rot(p){
-    // return (p.randf < .5 ? 3 : 4) + Math.round(p.ease_level*2);
-    return 3 + Math.round(p.norm_level*2);
+    return (p.randf < .5 ? 3 : 4) + Math.round(p.norm_level*2);
 }
 
 // lsys-rule callback
@@ -142,6 +141,14 @@ function setParams(params, level=null, id=null){
     }
 }
 
+function ease(x){ 
+    return (9**x-1)/8;
+}
+
+function logScale(x, b, ofs){
+    return Math.log(1+ofs*b+x*b-x-ofs*b*x)/Math.log(b);
+}
+
 // decode params from cipher string if present: &s=
 function checkCipher(p){
     if(p.cipher){
@@ -171,19 +178,14 @@ function rot47(x){
     return s.join('');
 }
 
-// crypto.en(de)crypt with AES settings could also be used.
 // encode url params into rot47 cipher (for server)
+// crypto.en(de)crypt with AES settings could also be used.
 function encodeURLCipher(str){
     return encodeURIComponent(rot47(str));
 }
 // decode cipher (for client)
 function decodeURLCipher(str){
     return rot47(decodeURIComponent(str));
-}
-
-function ease(x){ 
-    return Math.min((2**(3.46*x)-1)/10,1);
-    // return Math.min((2**(3*x)-1)/7,1);
 }
 
 // weights array -> cdf

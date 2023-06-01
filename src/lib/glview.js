@@ -1,4 +1,4 @@
-/*(c) shellderr 2023 BSD-1*/
+/*(c) shellderr 2023 BSD-2*/
 
 // createShaderProgram, setBuffers, enableAttributes, setUniforms, drawObj
 import * as mgl from './minigl.js';

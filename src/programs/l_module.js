@@ -1,4 +1,4 @@
-/*(c) shellderr 2023 BSD-1*/
+/*(c) shellderr 2023 BSD-2*/
 
 const {cos, sin, pow, sqrt, log, abs, sign, min, max, floor, round, random, PI} = Math;
 
@@ -8,7 +8,8 @@ import Quaternion from '../lib/quaternion.js';
 
 var ctx, ww, wh, params;
 var model;
-var lev = ease(.7);
+
+var lev = .5;
 var rule =  0;
 var n_i = 0; 
 var rot_n = 6;
@@ -17,13 +18,12 @@ var seed = 0;
 var hold = 20;
 var _time = 0;
 var amp = .7;
+
 var mainamp = 1.3;
 var low_amp_shift = 0;
-var lev_bump = 0;
-var logbase = 30;
-var logoffs = 0.01;
+var logbase = 20;
+var logoffs = 0.006;
 
-const idmat = [[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,1]];
 var qr, qi, qs;
 
 var stroke =  'rgba(223.4, 241.5, 151.2, 1';
@@ -65,17 +65,16 @@ function updateParams(ctl){
 
 	stroke = ctl.params.line_l.stroke;
 
-	// lev = min(ctl.params.ease_level+lev_bump,1);
-	// let lin = min(ctl.params.norm_level+lev_bump,1);
-
-	lev = logScale(ctl.params.ease_level, logbase, logoffs);
+	lev = logScale(ctl.params.norm_level, logbase, logoffs);
 	let lin = logScale(ctl.params.norm_level, logbase, logoffs);
 
 	let b = getBounds(model,lev);
 	let s = low_amp_shift*(lin < .4 ? 1-lin:0);
-
-	amp = .66*(.33*smstep(lev, 1, 0, .4) + 
-		.66*smstep(lin+s, .2, .8, .4+s*.5)/b);
+	// amp = radius as a function of pgive level
+	// two smoothstep functions are x-fading between the log-scaled level
+	// and the level clamped by getBounds. amp = 1/b would be constant radius
+	amp = .7*(.33*smstep(lin, 1, 0, .4) + 
+		.7*smstep(lin+s, .2, .8, .4+s*.5)/b);
 
 	return true;
 }
@@ -122,7 +121,6 @@ function loop(){
 		azlast = az;		
 	}
 	display(ctx, model, min(log(1+lev*5)*_time,lev), repeat_rot);	
-	// display(ctx, model, lev, repeat_rot);	
 }
 
 function unloop(){
@@ -185,12 +183,9 @@ function vec_mul(v, t){
 	    v[0]*t[0][2] + v[1]*t[1][2] + v[2]*t[2][2]
     ];
 }
+
 function create_rot(t){
     return [[cos(t), -sin(t), 0], [sin(t), cos(t), 0], [0, 0, 1]];
-}
-
-function ease(x){
-	return min((2**(3.46*x)-1)/10,1);
 }
 
 const gui = {
@@ -218,15 +213,15 @@ const gui = {
 			onChange: (v)=>{logbase = v;}
 		},
 		{
-			log_offs:[logoffs, 0, .05, .001],
+			log_offset:[logoffs, 0, .04, .001],
 			onChange: (v)=>{logoffs = v;}
 		},
 		{
-			low_amp_shift:[low_amp_shift, 0, .5, .01],
+			low_shift:[low_amp_shift, 0, .5, .01],
 			onChange: (v)=>{low_amp_shift = v;}
 		},
     	{
-    		amp: [mainamp, .5, 1.5, .1],
+    		amp: [mainamp, .5, 1.8, .1],
     		onChange: v => {mainamp = v;}	
 	    },
 	    {

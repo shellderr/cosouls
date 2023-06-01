@@ -1,4 +1,4 @@
-/*(c) shellderr 2023 BSD-1*/
+/*(c) shellderr 2023 BSD-2*/
 
 const {cos, sin, sqrt, min, max, floor, round, random, PI} = Math;
 

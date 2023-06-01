@@ -1,4 +1,4 @@
-/*(c) shellderr 2023 BSD-1*/
+/*(c) shellderr 2023 BSD-2*/
 
 import fs from 'fs';
 import polyhedra from './selectmodels.js';
