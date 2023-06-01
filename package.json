@@ -14,7 +14,7 @@
     "prep": "node ./src/programs/prepmodels.js"
   },
   "author": "shellderr",
-  "license": "BSD-1",
+  "license": "BSD-2",
   "dependencies": {
     "ifdef-loader": "^2.3.2",
     "terser-webpack-plugin": "^5.3.8",
