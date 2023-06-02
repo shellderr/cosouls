@@ -19,10 +19,10 @@ var hold = 20;
 var _time = 0;
 var amp = .7;
 
-var mainamp = 1.3;
+var mainamp = 1.4;
 var low_amp_shift = 0;
-var logbase = 20;
-var logoffs = 0.006;
+var logbase = 15;
+var logoffs = 0.005;
 
 var qr, qi, qs;
 
