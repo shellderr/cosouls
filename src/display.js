@@ -3,6 +3,8 @@ import {urlParams, jsonParams, genParamsObj} from './mainparams.js';
 import initDisplay from './initdisplay.js';
 
 var glview = undefined;
+const animate = true; // <keep this locked to true for now.
+const useGui = true;
 
 export default function Display({resolution=[500,500], params={}}){
 	const cstyle = {
@@ -19,14 +21,11 @@ export default function Display({resolution=[500,500], params={}}){
 	// on init
 	useEffect(()=>{
 		if(fgRef.current && bgRef.current){
-			if(!window.initGuard){
-				console.log('INIT');
-				let p = genParamsObj(params);
-				glview = initDisplay(fgRef.current, bgRef.current, resolution, p);
-				window.initGuard = true;
-			}else{
-				console.log('2nd init attempted');
-			}
+			let p = genParamsObj(params);
+			glview = initDisplay(fgRef.current, bgRef.current, resolution, p, useGui);
+		}
+		return ()=>{
+			glview.stop();
 		}
 	},[]);
 
@@ -34,18 +33,16 @@ export default function Display({resolution=[500,500], params={}}){
 	useEffect(()=>{
 		if(glview){
 			let p = genParamsObj(params);
-			glview.setParams(p, true);
+			glview.setParams(p, animate);
 		}
 	},[params]);
 
 	return(
 		<div>
-		{useMemo(()=>{return(
 			<div style={{position: 'relative'}}>
 				<canvas ref={fgRef} style={{...cstyle, zIndex: 1}}></canvas>
 				<canvas ref={bgRef} style={{...cstyle, zIndex: 0}}></canvas>
 			</div>
-		)},[])}
 		</div>
 	);
 };

@@ -70,18 +70,13 @@ function lsys_rot(p){
 // lsys-rule callback
 function lsys_rule(p){
     let rule =  weightedChoice(lsysweights.arr, lsysweights.sum, p.randf);
-    /// #if GUI
     console.log('rule', rule);
-    /// #endif
     return rule;
 }
 
 // polyhedron callback
 function geom_poly(p){
     let poly = weightedChoice(polyweights.arr, polyweights.sum, p.randf);
-    /// #if GUI
-    console.log('poly', poly);
-    /// #endif
     return poly;
 }
 
@@ -238,7 +233,6 @@ function mulberry32(a) {
       return ((t ^ t >>> 14) >>> 0) / 4294967296;
     }
 }
-
 
 
 export {urlParams, jsonParams, genParamsObj}

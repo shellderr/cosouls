@@ -87,7 +87,6 @@ function unloop(){
 
 }
 
-/// #if GUI
 const gui = {
     name: 'geom',
     open: false,
@@ -173,9 +172,6 @@ const gui = {
         }
     ]
 }
-/// #else 
-const gui = null;
-/// #endif
 
 const prog = {
     setup: setup,

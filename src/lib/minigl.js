@@ -40,8 +40,8 @@ function setBuffers(gl, obj, arrays){
 		if(attr.location < 0) continue;
 		let dataStr = typeof attr.data === 'string';
 		if(dataStr) attr.buffer = attribs[attr.data].buffer;
-		else if(!attr.buffer) attr.buffer = gl.createBuffer();
-		if(key=='position' && !obj.vao){
+		else attr.buffer = gl.createBuffer();
+		if(key=='position'){
 			obj.vao = gl.createVertexArray(); 
 			gl.bindVertexArray(obj.vao);		
 		}

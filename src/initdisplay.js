@@ -6,9 +6,8 @@
 
 import Glview from './lib/glview.js';
 import Lineview from "./lib/lineview.js";
-/// #if GUI
+
 import * as dat from "./lib/dat.gui.module.min.js";
-/// #endif
 
 import waves from './programs/waves.js';
 import waves2 from './programs/waves2.js';
@@ -19,15 +18,14 @@ var linewidth = .75, animate = true;
 var lineview = null, glview = null, levelUpdate = null, idUpdate = null, params = null;
 var levmax = 20000;
 
-/// #if GUI
-animate = false;
 const maingui = {
-    fields: [{
-                animate: animate,
-                onChange: (v)=>{
-                    if(v) maingui.ctl.start(); else maingui.ctl.stop();
-                }
-            },
+    fields: [
+            // {
+            //     animate: animate,
+            //     onChange: (v)=>{
+            //         if(v) maingui.ctl.start(); else maingui.ctl.stop();
+            //     }
+            // },
             {
                 pgive: [0, 0, 20000, 10],
                 onChange: (v)=>{
@@ -141,9 +139,9 @@ function hsl(h,s,l,a=1) { // (0,1) stackoverflow.com/a/64090995
 function setStroke(s){
     s.stroke = hsl(s.h,s.s,s.l,s.a);
 }
-/// #endif
 
-export default function initDisplay(fgCanvas, bgCanvas, resolution=[600,600], userparams={}){
+
+export default function initDisplay(fgCanvas, bgCanvas, resolution=[600,600], userparams={}, useGui=true){
     levelUpdate = userparams.guiLevelUpdate;
     idUpdate = userparams.guiIdUpdate;
     params = userparams;
@@ -157,13 +155,19 @@ export default function initDisplay(fgCanvas, bgCanvas, resolution=[600,600], us
         stop: lineview.stop.bind(lineview),
         pgms: lineview.pgms
     };
-    const pgm = {chain:[waves, waves2]};
-    /// #if GUI
-    glview = new Glview(bgCanvas, pgm, resolution, 0, new dat.GUI(), maingui, cb, userparams);
-    /// #else
-    glview = new Glview(bgCanvas, pgm, resolution, 0, null, null, cb, userparams);
-    /// #endif
-    if(animate) glview.start(); else glview.frame();
+    const pgm = {chain:[waves2]};
+    
+    if(useGui){
+        if(!window.initcount){
+            glview = new Glview(bgCanvas, pgm, resolution, 0, new dat.GUI(), maingui, cb, userparams);
+            window.initcount = 1;
+        }else{
+            glview = new Glview(bgCanvas, pgm, resolution, 0, null, null, cb, userparams);
+            window.initcount++;
+        }        
+    }else{
+        glview = new Glview(bgCanvas, pgm, resolution, 0, null, null, cb, userparams);
+    }
 
     return glview;
 }
