@@ -35,12 +35,14 @@ const config = (env, argv)=>{
                                 ]
                             }
                         },
+                        /*
                         {
                              loader: "ifdef-loader",
                              options: {
                                 GUI: !!env.gui
                              }
                         }
+                        */
                     ]
                 }
             ]
