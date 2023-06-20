@@ -25,6 +25,7 @@ export default function Display({resolution=[500,500], params={}}){
 			glview = initDisplay(fgRef.current, bgRef.current, resolution, p, useGui);
 		}
 		return ()=>{
+			// important:
 			glview.stop();
 		}
 	},[]);
