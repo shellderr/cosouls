@@ -33,7 +33,7 @@ export default function DisplayDriver({}){
 		<div style={{width: '100vw'}}>
 			<ButtonMenu dataArr={test_params} clickCb={ e => setParams(test_params[+e.target.value]) }/>
 			<p>{JSON.stringify(params)}</p>
-			<CosoulDisplay params={params}/>
+			<CosoulDisplay resolution={[600,600]} params={params}/>
 		</div>
 	);
 } 
