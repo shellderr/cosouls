@@ -20,7 +20,7 @@ var _time = 0;
 var amp = .7;
 
 var mainamp = 1.4;
-var low_amp_shift = 0;
+// var low_amp_shift = 0;
 var logbase = 15;
 var logoffs = 0.005;
 
@@ -65,11 +65,14 @@ function updateParams(ctl){
     lev = logScale(ctl.params.norm_level, logbase, logoffs);
 
     let b = getBounds(model,lev);
-    let s = low_amp_shift*(lev < .4 ? 1-lev:0);
+    // let s = low_amp_shift*(lev < .4 ? 1-lev:0);
+
     // amp = radius as a function of pgive level
     // two smoothstep functions are x-fading between the log-scaled level
     // and the level clamped by getBounds. amp = 1/b would be constant radius
-    amp = .7*(.33*smstep(lev, 1, 0, .4) + .7*smstep(lev+s, .2, .8, .4+s*.5)/b);
+    
+    amp = .7*(.33*smstep(lev, 1, 0, .4) + .7*smstep(lev, .2, .8, .4)/b);
+    // amp = .7*(.33*smstep(lev, 1, 0, .4) + .7*smstep(lev+s, .2, .8, .4+s*.5)/b);
     return true;
 }
 
@@ -210,10 +213,10 @@ const gui = {
             log_offset:[logoffs, 0, .04, .001],
             onChange: (v)=>{logoffs = v;}
         },
-        {
-            low_shift:[low_amp_shift, 0, .5, .01],
-            onChange: (v)=>{low_amp_shift = v;}
-        },
+        // {
+        //     low_shift:[low_amp_shift, 0, .5, .01],
+        //     onChange: (v)=>{low_amp_shift = v;}
+        // },
         {
             amp: [mainamp, .5, 1.8, .1],
             onChange: v => {mainamp = v;}   
