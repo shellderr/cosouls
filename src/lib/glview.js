@@ -60,6 +60,7 @@ const def_prog = {
 class Glview{
 
     constructor(canvas, pgms, res, fps, gui, guiobj, cbobj, params){
+        console.log(arguments)
     	this.pgms = (pgms instanceof Array)? pgms : [pgms];
         this.prog = this.pgms[0];
         this.gl = canvas.getContext("webgl2", {premultipliedAlpha: true, antialias: true});
@@ -83,14 +84,21 @@ class Glview{
         this.gl.blendFunc(this.gl.SRC_ALPHA, this.gl.ONE_MINUS_SRC_ALPHA);
         this.gl.viewport(0, 0, this.res[0], this.res[1]);
 
-        this.params = params;
         let nf = ()=>{};
         this.cbobj = cbobj || {init: nf, start:nf, stop: nf, frame:nf, pgms: [], params: []};
-        cbobj.init(this);
 
+        this.setParams(params);
+        
         if(!this.init(this.gl, this.pgms)){this.start = this.frame = ()=>{}; return;}
         if(gui) initGui(gui, this, guiobj);
         this.gl.clearColor(...this.prog.clearcolor);
+    }
+
+    setParams(params, _start){
+        if(this.loop) this.stop();
+        this.params = params;
+        this.cbobj.init(this);
+        if(_start) this.start();
     }
 
     start(){

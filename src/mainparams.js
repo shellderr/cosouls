@@ -1,16 +1,20 @@
-/*(c) shellderr 2023 BSD-2*/
-
-import start from './display.js';
 
 const LEVEL_MAX = 20000;
 const OVERFLOW = false;
 const fetch_params = false;
 const log_params = false;
 const fetch_url = 'http://localhost:5000/random';
+const fallback_lev = 2000;
 /*
-    params: 'id', 'pgive'or'level', 's' 
+    params: 
+    'id', 'pgive'or'level', 's' 
     's' is a cipher string for url paramaters and is decoded if present
     fetch_params sets the input method: true = json fetch, false = url parse.
+
+    exports: 
+    urlParams() - get simple params obj from url parameters
+    jsonParams() - get simple params obj from json endpoint
+    genParamsObj() - return full params obj from simple params to set in glview
 */
 const glob_params = {
     // id derived values
@@ -31,6 +35,8 @@ const glob_params = {
         lsys_rule : params => lsys_rule(params),
         geom_poly : params => geom_poly(params)
     },
+    guiLevelUpdate: guiLevelUpdate,
+    guiIdUpdate: guiIdUpdate,
     // global line colors, set css string manually to init
     line_l: {h:.2, s:.77, l:.72, a:1, stroke: 'rgb(223.4, 241.5, 151.2, 1)'},
     line_g: {h:.7, s:.8,  l:.56, a:1, stroke: 'rgb(89, 53, 232.56, 1)'}
@@ -44,14 +50,17 @@ const lsysweights = accumulateWeights(
 const polyweights = accumulateWeights(
 [[0,1.2],[1,1],[2,2],[3,.3],[4,.7],[5,.7]]);
 
-// -------- start program ----------
-(async ()=>{
-    let p = fetch_params ? await jsonParams(fetch_url) : urlParams();
-    if(log_params) console.log(p);
-    setParams(glob_params, p.level||2000, p.id||randID());
-    start(glob_params, guiLevelUpdate, guiIdUpdate);
-})();
 
+// returns a populated unique params obj from input params
+// object is templated by glob_params to use in glvew.setParams
+// input is a simple object with pgive, id params 
+function genParamsObj(obj={}){
+    let o = Object.assign({...glob_params}, obj);
+    if(Boolean(Number(o.pgive))) o.level = o.pgive;
+    if(!Boolean(Number(o.level))) o.level = fallback_lev;
+    setParams(o, +o.level, o.id || randID());
+    return o;
+}
 
 // lsys-rotation callback
 function lsys_rot(p){
@@ -229,3 +238,7 @@ function mulberry32(a) {
       return ((t ^ t >>> 14) >>> 0) / 4294967296;
     }
 }
+
+
+
+export {urlParams, jsonParams, genParamsObj}

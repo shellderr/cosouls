@@ -2,7 +2,7 @@
   "name": "cosouls",
   "version": "1.0.0",
   "description": "",
-  "main": "src/main.js",
+  "main": "src/app.js",
   "type": "module",
   "scripts": {
     "build": "webpack --mode development",
@@ -16,7 +16,13 @@
   "author": "shellderr",
   "license": "BSD-2",
   "dependencies": {
+    "@babel/core": "^7.22.5",
+    "@babel/preset-env": "^7.22.5",
+    "@babel/preset-react": "^7.22.5",
+    "babel-loader": "^9.1.2",
     "ifdef-loader": "^2.3.2",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
     "terser-webpack-plugin": "^5.3.8",
     "webpack": "^5.82.1",
     "webpack-cli": "^5.1.1",

@@ -4,7 +4,7 @@ import {resolve} from 'path'
 
 const config = (env, argv)=>{
     let obj = {
-        entry: './src/main.js',
+        entry: './src/app.js',
         output: {
             path: resolve('./public'),
             publicPath: '',
@@ -24,12 +24,24 @@ const config = (env, argv)=>{
                 {
                     test: /\.m?js$/,
                     exclude: /(node_modules)/,
-                    use: {
-                         loader: "ifdef-loader",
-                         options: {
-                            GUI: !!env.gui
-                         }
-                    }
+                    use: [
+                        {
+                            loader: "babel-loader",
+                            options: {
+                                presets: [
+                                ["@babel/preset-env",
+                                {targets: {node: 16}}], 
+                                "@babel/preset-react"
+                                ]
+                            }
+                        },
+                        {
+                             loader: "ifdef-loader",
+                             options: {
+                                GUI: !!env.gui
+                             }
+                        }
+                    ]
                 }
             ]
         }
